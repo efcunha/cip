@@ -181,6 +181,7 @@ cloud-intelligence-platform/
 | 7 | Fine-tuning infra (opcional) | ✅ |
 | **Deploy** | Standalone self-contained (podman/podman compose) | ✅ Ver `docs/RELEASE.md` |
 | **Eval real** | Validação com LLM real (MiniMax M3 / DeepSeek) | ✅ Rounds 19–22 |
+| **MCP Server** | Expõe CIP como tool para agentes externos (Cursor/Kiro/Claude) | ✅ Ver [`docs/mcp-server.md`](docs/mcp-server.md) |
 
 Detalhes e critérios de aceite em [`docs/09-plano-execucao-llm-cloud.md`](docs/09-plano-execucao-llm-cloud.md) e [`CHANGELOG.md`](CHANGELOG.md).
 
