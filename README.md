@@ -130,39 +130,57 @@ Ver [QUICKSTART.md](QUICKSTART.md) para guia completo com troubleshooting.
 
 ```
 cloud-intelligence-platform/
-├── README.md
+├── README.md / README.en.md    # documentação principal (PT-BR / EN)
+├── CHANGELOG.md / .en.md       # histórico de mudanças
+├── CONTRIBUTING.md / .en.md    # guia de contribuição
+├── QUICKSTART.md / .en.md      # guia de início rápido
 ├── pyproject.toml              # dependências e config de tooling
 ├── .env.example                # variáveis de ambiente
-├── docker-compose.yml          # API + Web UI + (Langfuse opcional); reusa Postgres externo (host:5432)
-├── docker-compose.prod.yml     # stack self-contained (Postgres próprio + bootstrap idempotente)
+├── Dockerfile                  # imagem da API
+├── docker-compose.yml          # API + Web UI + Postgres (dev)
+├── docker-compose.prod.yml     # stack self-contained (Postgres próprio + bootstrap)
 ├── Makefile                    # atalhos: make ingest / make eval / make up / make homolog
+├── mcp-config.json             # config MCP Server para editores (Cursor/Kiro/Claude)
 ├── db/
-│   ├── schema.sql              # tabelas cloud_docs, environments, analyses, findings + índices HNSW
+│   ├── schema.sql              # tabelas cloud_docs, environments, analyses, findings + HNSW
 │   ├── curated/                # fontes de conhecimento curadas (versionadas)
-│   └── migrations/             # migrations SQL (002/003/004) aplicadas via make schema-migrate
+│   └── migrations/             # migrations SQL aplicadas via make schema-migrate
 ├── docs/
 │   ├── 01-analise-recomendacoes.md   # análise das 3 propostas + decisão
-│   ├── 02-arquitetura.md
-│   ├── 03-roadmap.md
-│   ├── 04-modelo-de-dados.md
-│   └── adr/                    # Architecture Decision Records
+│   ├── 02-arquitetura.md             # arquitetura C4
+│   ├── 03-roadmap.md                 # roadmap por fases
+│   ├── 04-modelo-de-dados.md         # schema + relações
+│   ├── mcp-server.md / .en.md        # documentação do MCP Server
+│   ├── RELEASE.md / .en.md           # guia de release/deploy
+│   ├── homologation.md / .en.md      # procedimento de homologação
+│   ├── EXECUTIVE_SUMMARY.md / .en.md # resumo executivo
+│   ├── 10..52-progresso-round-*.md   # registros de progresso (rounds 1-26)
+│   └── adr/                          # Architecture Decision Records
 ├── src/cip/
 │   ├── config.py               # settings via env
+│   ├── mcp_server.py           # MCP Server (3 tools: cip_ask, cip_inspect, cip_analyze)
+│   ├── logging.py              # logging estruturado (structlog)
+│   ├── observability.py        # métricas e tracing
 │   ├── prompts/                # system prompts (persona + especialistas)
 │   ├── rag/                    # embeddings, retriever, engine
 │   ├── ingestion/              # crawler/chunker/ingest + sources.yaml
-│   ├── agents/                 # orquestrador + especialistas
-│   ├── tools/                  # wrappers read-only por cloud
-│   ├── inspection/             # Terraform / Kubernetes analyzers
-│   └── api/                    # FastAPI
+│   ├── agents/                 # orquestrador + 8 especialistas de domínio
+│   ├── tools/                  # wrappers read-only por cloud (pricing, inventory)
+│   ├── inspection/             # Terraform (7 regras) / Kubernetes (7 regras)
+│   └── api/                    # FastAPI (REST + WebSocket + auth + rate limit)
 ├── eval/
-│   ├── test_cases.json         # suíte de 60 cenários
-│   └── run_eval.py
+│   ├── test_cases.json         # suíte de 95 cenários
+│   ├── run_eval.py             # runner com rubrica 1-5 + gate de produção
+│   └── results/                # resultados de homologação
 ├── iac/
 │   ├── aws-readonly-policy.json
 │   ├── azure-setup.sh
 │   └── gcp-setup.sh
-└── tests/
+├── ops/
+│   └── grafana/                # dashboards de observabilidade
+├── scripts/                    # utilitários (CLI, load test, homolog, fine-tune, etc.)
+├── web/                        # Web UI (HTML + JS + CSS)
+└── tests/                      # testes unitários e de integração
 ```
 
 ---

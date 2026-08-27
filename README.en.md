@@ -130,39 +130,57 @@ See [QUICKSTART.md](QUICKSTART.md) for the complete guide with troubleshooting.
 
 ```
 cloud-intelligence-platform/
-├── README.md
+├── README.md / README.en.md    # main documentation (PT-BR / EN)
+├── CHANGELOG.md / .en.md       # change history
+├── CONTRIBUTING.md / .en.md    # contribution guide
+├── QUICKSTART.md / .en.md      # quickstart guide
 ├── pyproject.toml              # dependencies and tooling config
 ├── .env.example                # environment variables
-├── docker-compose.yml          # API + Web UI + (optional Langfuse); reuses external Postgres (host:5432)
-├── docker-compose.prod.yml     # self-contained stack (own Postgres + idempotent bootstrap)
+├── Dockerfile                  # API image
+├── docker-compose.yml          # API + Web UI + Postgres (dev)
+├── docker-compose.prod.yml     # self-contained stack (own Postgres + bootstrap)
 ├── Makefile                    # shortcuts: make ingest / make eval / make up / make homolog
+├── mcp-config.json             # MCP Server config for editors (Cursor/Kiro/Claude)
 ├── db/
-│   ├── schema.sql              # cloud_docs, environments, analyses, findings tables + HNSW indexes
+│   ├── schema.sql              # cloud_docs, environments, analyses, findings + HNSW indexes
 │   ├── curated/                # curated knowledge sources (versioned)
-│   └── migrations/             # SQL migrations (002/003/004) applied via make schema-migrate
+│   └── migrations/             # SQL migrations applied via make schema-migrate
 ├── docs/
 │   ├── 01-analise-recomendacoes.md   # analysis of the 3 proposals + decision
-│   ├── 02-arquitetura.md
-│   ├── 03-roadmap.md
-│   ├── 04-modelo-de-dados.md
-│   └── adr/                    # Architecture Decision Records
+│   ├── 02-arquitetura.md             # C4 architecture
+│   ├── 03-roadmap.md                 # phased roadmap
+│   ├── 04-modelo-de-dados.md         # schema + relations
+│   ├── mcp-server.md / .en.md        # MCP Server documentation
+│   ├── RELEASE.md / .en.md           # release/deploy guide
+│   ├── homologation.md / .en.md      # homologation procedure
+│   ├── EXECUTIVE_SUMMARY.md / .en.md # executive summary
+│   ├── 10..52-progresso-round-*.md   # progress records (rounds 1-26)
+│   └── adr/                          # Architecture Decision Records
 ├── src/cip/
 │   ├── config.py               # settings via env
+│   ├── mcp_server.py           # MCP Server (3 tools: cip_ask, cip_inspect, cip_analyze)
+│   ├── logging.py              # structured logging (structlog)
+│   ├── observability.py        # metrics and tracing
 │   ├── prompts/                # system prompts (persona + specialists)
 │   ├── rag/                    # embeddings, retriever, engine
 │   ├── ingestion/              # crawler/chunker/ingest + sources.yaml
-│   ├── agents/                 # orchestrator + specialists
-│   ├── tools/                  # read-only wrappers per cloud
-│   ├── inspection/             # Terraform / Kubernetes analyzers
-│   └── api/                    # FastAPI
+│   ├── agents/                 # orchestrator + 8 domain specialists
+│   ├── tools/                  # read-only wrappers per cloud (pricing, inventory)
+│   ├── inspection/             # Terraform (7 rules) / Kubernetes (7 rules)
+│   └── api/                    # FastAPI (REST + WebSocket + auth + rate limit)
 ├── eval/
-│   ├── test_cases.json         # suite of 60 scenarios
-│   └── run_eval.py
+│   ├── test_cases.json         # suite of 95 scenarios
+│   ├── run_eval.py             # runner with 1-5 rubric + production gate
+│   └── results/                # homologation results
 ├── iac/
 │   ├── aws-readonly-policy.json
 │   ├── azure-setup.sh
 │   └── gcp-setup.sh
-└── tests/
+├── ops/
+│   └── grafana/                # observability dashboards
+├── scripts/                    # utilities (CLI, load test, homolog, fine-tune, etc.)
+├── web/                        # Web UI (HTML + JS + CSS)
+└── tests/                      # unit and integration tests
 ```
 
 ---
