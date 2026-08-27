@@ -1,0 +1,148 @@
+version: "3.9"
+
+# ─────────────────────────────────────────────────────────────────────────
+# CIP — Cloud Intelligence Platform
+# Stack: cip-api (FastAPI) + opcionalmente langfuse (tracing) + web UI.
+#
+# BANCO: reutiliza o Postgres externo `cloudpilot_postgres` (pgvector:pg16).
+# Este compose NÃO sobe um postgres próprio. Pré-requisitos (uma vez):
+#   podman start cloudpilot_postgres
+#   podman network connect cip_default cloudpilot_postgres
+# O segundo comando coloca o postgres na rede DNS do compose (`cip_default`,
+# declarada no bloco `networks:` no final deste arquivo), permitindo que o
+# cip-api o resolva pelo nome `cloudpilot_postgres` via DNS interno do Podman.
+# (a rede default `podman` tem dns_enabled=false, por isso não serve aqui.)
+#
+# Observação sobre o nome da rede: `podman compose` cria a rede default com
+# o nome `<dir>_default`. Para o diretório `cip`, isso vira `cip_default`.
+# Confirmar com `podman network ls` (deve listar `cip_default` com driver
+# bridge e DNS habilitado).
+#
+# Subir tudo:
+#   podman compose up -d
+#   curl http://localhost:8001/health/ready
+#
+# Logs:
+#   podman compose logs -f cip-api
+# ─────────────────────────────────────────────────────────────────────────
+
+x-api-common: &api-common
+  build:
+    context: .
+    dockerfile: Dockerfile
+    # target `homolog` = runtime + eval/ + tests/ + dev deps (pytest), para
+    # rodar preflight/eval/testes dentro do container. Em deploy real, use o
+    # target `base` (imagem enxuta, sem artefatos de teste).
+    target: homolog
+  restart: unless-stopped
+  # Reutiliza o Postgres externo `cloudpilot_postgres` (pgvector:pg16). O
+  # cip-api entra na MESMA rede podman do postgres (ver `networks:` abaixo) e
+  # o alcança pelo nome do container `cloudpilot_postgres` via DNS interno.
+  environment: &api-env
+    # ─── Banco (Postgres externo cloudpilot_postgres, mesma rede podman) ───
+    DATABASE_URL: postgresql://cip:cip@cloudpilot_postgres:5432/cip
+    DB_HOST: cloudpilot_postgres
+    DB_PORT: "5432"
+    DB_NAME: cip
+    DB_USER: cip
+    DB_PASSWORD: cip
+    DB_POOL_SIZE: "20"
+    DB_MAX_OVERFLOW: "20"
+
+    # ─── LLM (defaults MiniMax M3) ───
+    LLM_PROVIDER: ${LLM_PROVIDER:-minimax}
+    LLM_MODEL: ${LLM_MODEL:-MiniMax-M3}
+    LLM_BASE_URL: ${LLM_BASE_URL:-https://api.minimax.io/v1}
+    LLM_CONTEXT_SIZE: ${LLM_CONTEXT_SIZE:-1000000}
+    LLM_MAX_TOKENS: ${LLM_MAX_TOKENS:-131072}
+    LLM_TEMPERATURE: ${LLM_TEMPERATURE:-0.1}
+    LLM_TIMEOUT_S: ${LLM_TIMEOUT_S:-60}
+    LLM_MAX_RETRIES: ${LLM_MAX_RETRIES:-2}
+
+    # ─── Embeddings ───
+    EMBED_PROVIDER: ${EMBED_PROVIDER:-local}
+    EMBED_MODEL: ${EMBED_MODEL:-BAAI/bge-large-en-v1.5}
+    EMBED_DIM: ${EMBED_DIM:-1024}
+    EMBED_DEVICE: cpu
+
+    # ─── App ───
+    CIP_ENV: ${CIP_ENV:-production}
+    CIP_READONLY: "true"
+    LOG_LEVEL: ${LOG_LEVEL:-INFO}
+    PORT: "8000"
+
+    # ─── Concorrência ───
+    MAX_CONCURRENT_REQUESTS: "200"
+    REQUEST_TIMEOUT_S: "90"
+
+  healthcheck:
+    test: ["CMD", "curl", "-fsS", "http://localhost:8000/health/live"]
+    interval: 30s
+    timeout: 10s
+    retries: 3
+    start_period: 90s  # tempo de carregar embedding model + LLM
+
+services:
+  # ─── CIP API (FastAPI + orchestrator + 11 specialists) ───────────
+  cip-api:
+    <<: *api-common
+    container_name: cip-api
+    ports:
+      # Host 8001 -> container 8000 (host:8000 já é usado pelo cloudpilot_backend)
+      - "8001:8000"
+    volumes:
+      # Opcional: persistir logs fora do container
+      - cip-api-logs:/app/logs
+    # env_file opcional — só carrega se existir
+    env_file:
+      - path: ./.env
+        required: false
+    # Rede do compose — habilita DNS interno do Podman para que o
+    # `cip-api` resolva `cloudpilot_postgres` por nome (ver bloco
+    # `networks:` no final). O container externo `cloudpilot_postgres`
+    # deve ser conectado manualmente a essa rede uma vez:
+    #   podman network connect cip_default cloudpilot_postgres
+    networks:
+      - cip_default
+
+  # ─── Web UI (placeholder — usa o web/ standalone por enquanto) ──────
+  cip-web:
+    image: nginx:alpine
+    container_name: cip-web
+    restart: unless-stopped
+    profiles: ["with-web"]
+    volumes:
+      - ./web:/usr/share/nginx/html:ro
+    ports:
+      - "8080:80"
+    depends_on:
+      - cip-api
+
+  # ─── Observabilidade opcional (Langfuse para tracing de RAG) ──────
+  langfuse:
+    image: langfuse/langfuse:latest
+    container_name: cip-langfuse
+    restart: unless-stopped
+    profiles: ["observability"]
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+    environment:
+      # Usa o Postgres externo cloudpilot_postgres (database `langfuse`).
+      DATABASE_URL: ${LANGFUSE_DATABASE_URL:-postgresql://cip:cip@host.docker.internal:5432/langfuse}
+      NEXTAUTH_SECRET: ${NEXTAUTH_SECRET:-dev-only-change-me}
+      SALT: ${SALT:-dev-only-change-me}
+      NEXTAUTH_URL: http://localhost:3000
+    ports:
+      - "3000:3000"
+
+volumes:
+  cip-api-logs:
+    name: cip-api-logs
+
+networks:
+  # Rede bridge com DNS habilitado usada pelo cip-api para resolver o Postgres
+  # externo `cloudpilot_postgres` por nome. Declarada como `external` porque já
+  # foi criada na primeira subida do compose e o `cloudpilot_postgres` já está
+  # conectado a ela (podman network connect cip_default cloudpilot_postgres).
+  cip_default:
+    external: true

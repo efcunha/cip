@@ -1,0 +1,650 @@
+# Sources AVANÇADAS — Round 18
+# Preenchem os gaps para "Distinguished Architect" level:
+# - AI/ML Infrastructure
+# - Platform Engineering
+# - GitOps (Argo CD, Flux)
+# - Observability (Prometheus, OpenTelemetry)
+# - SRE / Reliability (chaos engineering, SLOs)
+# - Advanced Networking
+# - Security avançado (OPA, Zero Trust, supply chain)
+# - Software Architecture patterns
+
+# Formato: mesmo do sources.yaml — cada entrada vira metadados no cloud_docs
+# (cloud, service, category, source, framework).
+# URLs validadas via scripts/audit_sources.py.
+
+mvp:
+  aws:
+    # AI/ML Infrastructure
+    - source: aws-ml
+      service: sagemaker
+      category: ai-ml
+      doc_type: reference
+      framework: ml-platform
+      urls:
+        - https://docs.aws.amazon.com/sagemaker/latest/dg/whatis.html
+        - https://docs.aws.amazon.com/sagemaker/latest/dg/inference-recommendations.html
+        - https://docs.aws.amazon.com/sagemaker/latest/dg/model-registry.html
+        - https://docs.aws.amazon.com/sagemaker/latest/dg/inference-pipelines.html
+    - source: aws-ml
+      service: bedrock
+      category: ai-ml
+      doc_type: reference
+      framework: ml-platform
+      urls:
+        - https://docs.aws.amazon.com/bedrock/latest/userguide/what-is-bedrock.html
+        - https://docs.aws.amazon.com/bedrock/latest/userguide/inference.html
+        - https://docs.aws.amazon.com/bedrock/latest/userguide/knowledge-base.html
+    - source: aws-ml
+      service: ecs-gpu
+      category: ai-ml
+      doc_type: reference
+      urls:
+        - https://docs.aws.amazon.com/AmazonECS/latest/developerguide/ecs-gpu.html
+        - https://docs.aws.amazon.com/eks/latest/userguide/gpu-ami.html
+    # Platform Engineering
+    - source: aws-platform
+      service: control-tower
+      category: governance
+      doc_type: reference
+      urls:
+        - https://docs.aws.amazon.com/controltower/latest/userguide/what-is-control-tower.html
+        - https://docs.aws.amazon.com/controltower/latest/userguide/lz-api-concepts.html
+    - source: aws-platform
+      service: organizations
+      category: governance
+      doc_type: reference
+      urls:
+        - https://docs.aws.amazon.com/organizations/latest/userguide/orgs_introduction.html
+    - source: aws-platform
+      service: sso
+      category: governance
+      doc_type: reference
+      urls:
+        - https://docs.aws.amazon.com/singlesignon/latest/userguide/what-is.html
+    # Advanced Networking
+    - source: aws-networking
+      service: direct-connect
+      category: networking
+      doc_type: reference
+      urls:
+        - https://docs.aws.amazon.com/directconnect/latest/UserGuide/Welcome.html
+        - https://docs.aws.amazon.com/directconnect/latest/UserGuide/direct-connect-gateways.html
+        - https://docs.aws.amazon.com/directconnect/latest/UserGuide/direct-connect-transit-gateway.html
+    - source: aws-networking
+      service: transit-gateway
+      category: networking
+      doc_type: reference
+      urls:
+        - https://docs.aws.amazon.com/vpc/latest/tgw/what-is-transit-gateway.html
+        - https://docs.aws.amazon.com/vpc/latest/tgw/tgw-best-design-practices.html
+    - source: aws-networking
+      service: privatelink
+      category: networking
+      doc_type: reference
+      urls:
+        - https://docs.aws.amazon.com/vpc/latest/privatelink/what-is-privatelink.html
+    # Observability
+    - source: aws-observability
+      service: cloudwatch
+      category: observability
+      doc_type: reference
+      urls:
+        - https://docs.aws.amazon.com/AmazonCloudWatch/latest/monitoring/WhatIsCloudWatch.html
+        - https://docs.aws.amazon.com/AmazonCloudWatch/latest/monitoring/CloudWatch_SLI.html
+    - source: aws-observability
+      service: xray
+      category: observability
+      doc_type: reference
+      urls:
+        - https://docs.aws.amazon.com/xray/latest/devguide/xray-concepts.html
+        - https://docs.aws.amazon.com/xray/latest/devguide/xray-console.html
+    - source: aws-observability
+      service: cloudwatch-synthetics
+      category: observability
+      doc_type: reference
+      urls:
+        - https://docs.aws.amazon.com/AmazonCloudWatch/latest/monitoring/CloudWatch_Synthetics_Canaries.html
+    # Security avançado
+    - source: aws-security
+      service: security-hub
+      category: security
+      doc_type: reference
+      urls:
+        - https://docs.aws.amazon.com/securityhub/latest/userguide/what-is-securityhub.html
+        - https://docs.aws.amazon.com/securityhub/latest/userguide/securityhub-standards.html
+    - source: aws-security
+      service: inspector
+      category: security
+      doc_type: reference
+      urls:
+        - https://docs.aws.amazon.com/inspector/latest/user/what-is-inspector.html
+    - source: aws-security
+      service: macie
+      category: security
+      doc_type: reference
+      urls:
+        - https://docs.aws.amazon.com/macie/latest/user/what-is-macie.html
+    # Round 22.4: postmortem S3 US-EAST-1 2017 curado localmente e registrado
+    # TAMBÉM sob o pseudo-cloud "aws" (além de "case-studies"). O router por
+    # keywords mapeia "S3" -> aws, e o especialista aws filtra retrieval por
+    # cloud=aws; sem esta entrada o postmortem não era recuperável para a query
+    # do homolog cases-001. O conteúdo factual e as fontes são os mesmos do
+    # arquivo curado (nenhuma duplicação no disco, só metadata cloud=aws).
+    - source: aws-postmortems
+      service: s3-postmortem
+      category: case-studies
+      doc_type: postmortem
+      urls: []
+      local_files:
+        - path: db/curated/s3-2017-postmortem.md
+          url: https://www.networkworld.com/article/960912/read-the-full-text-of-amazons-post-mortem-from-its-s3-cloud-brownout.html
+  gcp:
+    # AI/ML
+    - source: gcp-ml
+      service: vertex-ai
+      category: ai-ml
+      doc_type: reference
+      framework: ml-platform
+      urls:
+        - https://cloud.google.com/vertex-ai/docs/start/introduction-unified-platform
+        - https://cloud.google.com/vertex-ai/generative-ai/docs/start/quickstart/api-keys
+        - https://cloud.google.com/vertex-ai/docs/predictions/online-predictions
+    - source: gcp-ml
+      service: vertex-ai-vector-search
+      category: ai-ml
+      doc_type: reference
+      urls:
+        - https://cloud.google.com/vertex-ai/docs/vector-search/overview
+        - https://cloud.google.com/vertex-ai/docs/vector-search/create-index
+    # Platform Engineering
+    - source: gcp-platform
+      service: org-policy
+      category: governance
+      doc_type: reference
+      urls:
+        - https://cloud.google.com/resource-manager/docs/organization-policy/overview
+        - https://cloud.google.com/resource-manager/docs/organization-policy/org-policy-constraints
+    - source: gcp-platform
+      service: anthos
+      category: compute
+      doc_type: reference
+      urls:
+        - https://cloud.google.com/anthos/docs/concepts/overview
+    # Advanced Networking
+    - source: gcp-networking
+      service: cloud-interconnect
+      category: networking
+      doc_type: reference
+      urls:
+        - https://cloud.google.com/network-connectivity/docs/interconnect/concepts/overview
+        - https://cloud.google.com/network-connectivity/docs/interconnect/concepts/dedicated-overview
+        - https://cloud.google.com/network-connectivity/docs/interconnect/concepts/partner-overview
+    - source: gcp-networking
+      service: cloud-nat
+      category: networking
+      doc_type: reference
+      urls:
+        - https://cloud.google.com/nat/docs/overview
+    # Observability
+    - source: gcp-observability
+      service: cloud-trace
+      category: observability
+      doc_type: reference
+      urls:
+        - https://cloud.google.com/trace/docs/overview
+    - source: gcp-observability
+      service: cloud-profiler
+      category: observability
+      doc_type: reference
+      urls:
+        - https://cloud.google.com/profiler/docs/about-profiler
+    - source: gcp-observability
+      service: error-reporting
+      category: observability
+      doc_type: reference
+      urls:
+        - https://cloud.google.com/error-reporting/docs/concepts.html
+    # Security
+    - source: gcp-security
+      service: security-command-center
+      category: security
+      doc_type: reference
+      urls:
+        - https://cloud.google.com/security-command-center/docs/concepts-overview
+        - https://cloud.google.com/security-command-center/docs/concepts-vulnerabilities
+    - source: gcp-security
+      service: binary-authorization
+      category: security
+      doc_type: reference
+      urls:
+        - https://cloud.google.com/binary-authorization/docs/overview
+  azure:
+    # AI/ML
+    - source: azure-ml
+      service: machine-learning
+      category: ai-ml
+      doc_type: reference
+      framework: ml-platform
+      urls:
+        - https://learn.microsoft.com/en-us/azure/machine-learning/concept-azure-machine-learning-architecture
+        - https://learn.microsoft.com/en-us/azure/machine-learning/concept-endpoints
+    - source: azure-ml
+      service: ai-foundry
+      category: ai-ml
+      doc_type: reference
+      urls:
+        - https://learn.microsoft.com/en-us/azure/ai-foundry/what-is-azure-ai-foundry
+        - https://learn.microsoft.com/en-us/azure/ai-foundry/concepts/models
+    - source: azure-ml
+      service: azure-openai
+      category: ai-ml
+      doc_type: reference
+      urls:
+        - https://learn.microsoft.com/en-us/azure/ai-services/openai/concepts/models
+        - https://learn.microsoft.com/en-us/azure/ai-services/openai/concepts/embeddings
+    # Platform Engineering
+    - source: azure-platform
+      service: management-groups
+      category: governance
+      doc_type: reference
+      urls:
+        - https://learn.microsoft.com/en-us/azure/governance/management-groups/overview
+        - https://learn.microsoft.com/en-us/azure/cloud-adoption-framework/ready/azure-best-practices/organize-subscriptions
+    - source: azure-platform
+      service: policy
+      category: governance
+      doc_type: reference
+      urls:
+        - https://learn.microsoft.com/en-us/azure/governance/policy/overview
+    # Advanced Networking
+    - source: azure-networking
+      service: expressroute
+      category: networking
+      doc_type: reference
+      urls:
+        - https://learn.microsoft.com/en-us/azure/expressroute/expressroute-introduction
+        - https://learn.microsoft.com/en-us/azure/expressroute/design-architecture-for-azure-expressroute
+    - source: azure-networking
+      service: virtual-wan
+      category: networking
+      doc_type: reference
+      urls:
+        - https://learn.microsoft.com/en-us/azure/virtual-wan/virtual-wan-overview
+    - source: azure-networking
+      service: bastion
+      category: networking
+      doc_type: reference
+      urls:
+        - https://learn.microsoft.com/en-us/azure/bastion/bastion-overview
+    # Observability
+    - source: azure-observability
+      service: monitor
+      category: observability
+      doc_type: reference
+      urls:
+        - https://learn.microsoft.com/en-us/azure/azure-monitor/overview
+        - https://learn.microsoft.com/en-us/azure/azure-monitor/essentials/azure-monitor-data-platform
+    - source: azure-observability
+      service: application-insights
+      category: observability
+      doc_type: reference
+      urls:
+        - https://learn.microsoft.com/en-us/azure/azure-monitor/app/app-insights-overview
+    # Security
+    - source: azure-security
+      service: defender-for-cloud
+      category: security
+      doc_type: reference
+      urls:
+        - https://learn.microsoft.com/en-us/azure/defender-for-cloud/defender-for-cloud-introduction
+    - source: azure-security
+      service: sentinel
+      category: security
+      doc_type: reference
+      urls:
+        - https://learn.microsoft.com/en-us/azure/sentinel/overview
+        - https://learn.microsoft.com/en-us/azure/sentinel/investigate-cases
+  multi:
+    # Kubernetes (multi-cloud)
+    - source: kubernetes-docs
+      service: kubernetes
+      category: compute
+      doc_type: reference
+      urls:
+        - https://kubernetes.io/docs/concepts/overview/components/
+        - https://kubernetes.io/docs/concepts/workloads/controllers/deployment/
+        - https://kubernetes.io/docs/concepts/services-networking/service/
+        - https://kubernetes.io/docs/concepts/storage/persistent-volumes/
+        - https://kubernetes.io/docs/concepts/configuration/configmap/
+        - https://kubernetes.io/docs/concepts/security/pod-security-standards/
+        - https://kubernetes.io/docs/concepts/scheduling-eviction/
+        - https://kubernetes.io/docs/concepts/autoscaling/
+    - source: kubernetes-docs
+      service: kubernetes-networking
+      category: networking
+      doc_type: reference
+      urls:
+        - https://kubernetes.io/docs/concepts/services-networking/ingress/
+        - https://kubernetes.io/docs/concepts/services-networking/network-policies/
+        - https://kubernetes.io/docs/tasks/access-application-cluster/ingress-minikube/
+    # Observability (multi-cloud)
+    - source: prometheus
+      service: prometheus
+      category: observability
+      doc_type: reference
+      urls:
+        - https://prometheus.io/docs/introduction/overview/
+        - https://prometheus.io/docs/prometheus/latest/querying/basics/
+        - https://prometheus.io/docs/alerting/latest/alerting-rules/
+    - source: grafana
+      service: grafana
+      category: observability
+      doc_type: reference
+      urls:
+        - https://grafana.com/docs/grafana/latest/getting-started/
+        - https://grafana.com/docs/grafana/latest/dashboards/
+    - source: opentelemetry
+      service: opentelemetry
+      category: observability
+      doc_type: reference
+      urls:
+        - https://opentelemetry.io/docs/concepts/what-is-opentelemetry/
+        - https://opentelemetry.io/docs/collector/architecture/
+    - source: prometheus
+      service: alertmanager
+      category: observability
+      doc_type: reference
+      urls:
+        - https://prometheus.io/docs/alerting/latest/alertmanager/
+    # GitOps (multi-cloud)
+    - source: argocd
+      service: argocd
+      category: devops
+      doc_type: reference
+      urls:
+        - https://argo-cd.readthedocs.io/en/stable/getting_started/
+        - https://argo-cd.readthedocs.io/en/stable/operator-manual/architecture/
+        - https://argo-cd.readthedocs.io/en/stable/user-guide/application-sets/
+    - source: fluxcd
+      service: flux
+      category: devops
+      doc_type: reference
+      urls:
+        - https://fluxcd.io/flux/
+        - https://fluxcd.io/flux/components/source/helmrepositories/
+    # IaC (multi-cloud)
+    - source: terraform
+      service: terraform
+      category: devops
+      doc_type: reference
+      urls:
+        - https://developer.hashicorp.com/terraform/intro
+        - https://developer.hashicorp.com/terraform/language/state
+        - https://developer.hashicorp.com/terraform/cli/commands/plan
+        - https://developer.hashicorp.com/terraform/cli/commands/apply
+        - https://developer.hashicorp.com/terraform/cloud
+    - source: opentofu
+      service: opentofu
+      category: devops
+      doc_type: reference
+      urls:
+        - https://opentofu.org/docs/intro/
+        - https://opentofu.org/docs/state/
+    - source: crossplane
+      service: crossplane
+      category: devops
+      doc_type: reference
+      urls:
+        - https://docs.crossplane.io/latest/concepts/
+        - https://docs.crossplane.io/latest/getting-started/
+    # Platform Engineering (multi-cloud)
+    - source: backstage
+      service: backstage
+      category: devops
+      doc_type: reference
+      urls:
+        - https://backstage.io/docs/overview/what-is-backstage/
+        - https://backstage.io/docs/features/software-catalog/
+        - https://backstage.io/docs/features/software-templates/
+        - https://backstage.io/docs/features/techdocs/
+    # Security avançado (multi-cloud)
+    - source: opa
+      service: opa
+      category: security
+      doc_type: reference
+      urls:
+        - https://www.openpolicyagent.org/docs/latest/
+        - https://www.openpolicyagent.org/docs/latest/policy-language/
+    - source: falco
+      service: falco
+      category: security
+      doc_type: reference
+      urls:
+        - https://falco.org/docs/
+    - source: trivy
+      service: trivy
+      category: security
+      doc_type: reference
+      urls:
+        - https://trivy.dev/latest/docs/
+    # Vector DBs
+    - source: weaviate
+      service: weaviate
+      category: ai-ml
+      doc_type: reference
+      urls:
+        - https://weaviate.io/developers/weaviate
+        - https://weaviate.io/developers/weaviate/concepts/vector-index
+    - source: qdrant
+      service: qdrant
+      category: ai-ml
+      doc_type: reference
+      urls:
+        - https://qdrant.tech/documentation/
+        - https://qdrant.tech/documentation/guides/distributed_deployment/
+    # Chaos Engineering
+    - source: chaos-mesh
+      service: chaos-mesh
+      category: devops
+      doc_type: reference
+      urls:
+        - https://chaos-mesh.org/docs/
+    - source: litmus
+      service: litmus
+      category: devops
+      doc_type: reference
+      urls:
+        - https://litmuschaos.io/docs/overview/
+    # Service Mesh
+    - source: istio
+      service: istio
+      category: devops
+      doc_type: reference
+      urls:
+        - https://istio.io/latest/docs/
+        - https://istio.io/latest/docs/concepts/what-is-istio/
+        - https://istio.io/latest/docs/tasks/traffic-management/
+    # CI/CD
+    - source: github-actions
+      service: github-actions
+      category: devops
+      doc_type: reference
+      urls:
+        - https://docs.github.com/en/actions/learn-github-actions/understanding-github-actions
+        - https://docs.github.com/en/actions/security-guides/security-hardening-for-github-actions
+    # SRE
+    - source: sre-book
+      service: sre
+      category: reliability
+      doc_type: guide
+      urls:
+        - https://sre.google/sre-book/table-of-contents/
+        - https://sre.google/sre-book/postmortem-culture/
+        - https://sre.google/sre-book/eliminating-toil/
+    - source: google-sre
+      service: slo-engineering
+      category: reliability
+      doc_type: guide
+      urls:
+        - https://sre.google/workbook/table-of-contents/
+        - https://sre.google/workbook/slo-document/
+
+# ─────────────────────────────────────────────────────────────────────────
+# Round 22: Software Architecture patterns (knowledge area adicional)
+# Carregado como pseudo-cloud "architecture" — não conflita com o multi existente.
+# ─────────────────────────────────────────────────────────────────────────
+architecture:
+  - source: microservices-io
+    service: microservices-patterns
+    category: architecture
+    doc_type: guide
+    urls:
+      - https://microservices.io/patterns/microservices.html
+      - https://microservices.io/patterns/decomposition/decompose-by-business-capability.html
+      - https://microservices.io/patterns/data/database-per-service.html
+      - https://microservices.io/patterns/communication-style/rpi.html
+      - https://microservices.io/patterns/observability/health-monitoring.html
+  - source: martinfowler
+    service: architecture-patterns
+    category: architecture
+    doc_type: guide
+    urls:
+      - https://martinfowler.com/articles/microservices.html
+      - https://martinfowler.com/bliki/CircuitBreaker.html
+      - https://martinfowler.com/eaaDev/EventSourcing.html
+      - https://martinfowler.com/bliki/BoundedContext.html
+  - source: microsoft-azure
+    service: architecture-patterns
+    category: architecture
+    doc_type: guide
+    urls:
+      - https://learn.microsoft.com/en-us/azure/architecture/patterns/cqrs
+      - https://learn.microsoft.com/en-us/azure/architecture/patterns/event-sourcing
+      - https://learn.microsoft.com/en-us/azure/architecture/patterns/saga
+      - https://learn.microsoft.com/en-us/azure/architecture/patterns/circuit-breaker
+      - https://learn.microsoft.com/en-us/azure/architecture/patterns/bulkhead
+  - source: aws-prescriptive
+    service: architecture
+    category: architecture
+    doc_type: guide
+    urls:
+      - https://docs.aws.amazon.com/prescriptive-guidance/latest/modern-application-development/introduction.html
+      - https://docs.aws.amazon.com/prescriptive-guidance/latest/architecture-guide/messaging-architecture.html
+  - source: google-cloud-architecture
+    service: architecture
+    category: architecture
+    doc_type: guide
+    urls:
+      - https://cloud.google.com/architecture/application-design-and-process-management
+
+# ─────────────────────────────────────────────────────────────────────────
+# Round 22+: Real-world case studies (postmortems, lessons learned)
+# Carregado como pseudo-cloud "case-studies" — usado pelo forum_fetcher para
+# complementar URLs estáticas com postmortems descobertos em HN/dev.to/Reddit.
+# ─────────────────────────────────────────────────────────────────────────
+case-studies:
+  - source: aws-postmortems
+    service: postmortems
+    category: case-studies
+    doc_type: postmortem
+    urls:
+      - https://aws.amazon.com/message/12721/  # Kinesis event storm
+      - https://aws.amazon.com/message/64894/  # us-east-1 Dec 7 2021
+      - https://aws.amazon.com/message/12727/  # us-east-1 Oct 22 2021
+    # Round 22.4: o postmortem S3 US-EAST-1 2017 (message/02719 -> 41926) é
+    # curado localmente e registrado sob o pseudo-cloud "aws" (ver mvp.aws),
+    # porque o router mapeia "S3" -> aws e o especialista aws filtra retrieval
+    # por cloud=aws. Mantê-lo também aqui sob cloud=case-studies criava chunks
+    # duplicados (mesmo content_hash) que o dedupe descartava.
+  - source: google-cloud-incidents
+    service: postmortems
+    category: case-studies
+    doc_type: postmortem
+    urls:
+      - https://status.cloud.google.com/summary
+      - https://cloud.google.com/blog/topics/inside-google-cloud
+  - source: netflix-tech-blog
+    service: case-studies
+    category: case-studies
+    doc_type: engineering-blog
+    # Round 22.4: netflixtechblog.com (Medium) bloqueia o fetcher via Cloudflare
+    # (paginas "you have been blocked"). Conteúdo factual curado localmente
+    # (schema evolution, backpressure, idempotency, streaming), citando as URLs
+    # oficiais da Netflix como provenance.
+    urls: []
+    local_files:
+      - path: db/curated/netflix-spark-kafka.md
+        url: https://netflixtechblog.com/2018/12/12/netflix-spark-and-kafka/
+  - source: linkedin-engineering
+    service: case-studies
+    category: case-studies
+    doc_type: engineering-blog
+    urls:
+      - https://engineering.linkedin.com/blog
+      - https://engineering.linkedin.com/blog/2018/04/lessons-learned-from-running-hadoop-yarn
+  - source: uber-engineering
+    service: case-studies
+    category: case-studies
+    doc_type: engineering-blog
+    # Round 22.6: uber.com/blog é SPA/JS-blocked para o fetcher (thin content).
+    # Conteúdo factual curado localmente (Schemaless + migração Postgres→MySQL),
+    # citando as URLs oficiais da Uber como provenance.
+    urls: []
+    local_files:
+      - path: db/curated/uber-schemaless-mysql.md
+        url: https://www.uber.com/blog/schemaless-part-one-mysql-datastore/
+  - source: cloudflare-blog
+    service: case-studies
+    category: case-studies
+    doc_type: engineering-blog
+    urls:
+      - https://blog.cloudflare.com/tagged/post-mortem
+  - source: gitlab-incidents
+    service: case-studies
+    category: case-studies
+    doc_type: postmortem
+    # Round 22.6: about.gitlab.com handbook é JS-blocked para o fetcher
+    # (thin content). Postmortem factual do database outage de 31/01/2017
+    # curado localmente, citando a URL oficial do postmortem como provenance.
+    urls: []
+    local_files:
+      - path: db/curated/gitlab-2017-db-postmortem.md
+        url: https://about.gitlab.com/blog/postmortem-of-database-outage-of-january-31/
+  - source: slack-engineering
+    service: case-studies
+    category: case-studies
+    doc_type: engineering-blog
+    urls:
+      - https://slack.engineering/
+  - source: dropbox-tech
+    service: case-studies
+    category: case-studies
+    doc_type: engineering-blog
+    urls:
+      - https://dropbox.tech/
+  - source: stripe-engineering
+    service: case-studies
+    category: case-studies
+    doc_type: engineering-blog
+    urls:
+      - https://stripe.com/blog/engineering
+  - source: aws-architecture-blog
+    service: case-studies
+    category: case-studies
+    doc_type: engineering-blog
+    urls:
+      - https://aws.amazon.com/blogs/architecture/
+      - https://aws.amazon.com/solutions/case-studies/
+  - source: gcp-customers
+    service: case-studies
+    category: case-studies
+    doc_type: case-study
+    urls:
+      - https://cloud.google.com/customers/
+  - source: azure-customers
+    service: case-studies
+    category: case-studies
+    doc_type: case-study
+    urls:
+      - https://customers.microsoft.com/en-us/story/

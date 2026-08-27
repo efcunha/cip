@@ -1,0 +1,156 @@
+# ─────────────────────────────────────────────────────────────────────────
+# CIP — deploy SELF-CONTAINED (open-source)
+# ─────────────────────────────────────────────────────────────────────────
+# Sobe a stack completa do ZERO num servidor Linux limpo:
+#   1. cip_postgres  — Postgres PRÓPRIO do CIP (pgvector/pgvector:pg16).
+#                      Nome NEUTRO (não "cloudpilot"). O postgres do CloudPilot
+#                      é OUTRO banco/host — nunca é tocado aqui.
+#   2. cip-init      — bootstrap idempotente (schema + migrations + ingest KB).
+#                      Container efêmero: roda scripts/bootstrap_prod.py e sai 0.
+#   3. cip-api       — API FastAPI (imagem enxuta target `base`), espera o
+#                      cip-init COMPLETAR com sucesso antes de subir.
+#
+# Diferença vs `docker-compose.yml` (modo integrado, NÃO alterado):
+#   - Aquele consome um Postgres EXTERNO (`cloudpilot_postgres`, rede external
+#     `cip_default`, imagem `homolog` com artefatos de teste, porta 8001).
+#   - Este é auto-contido: Postgres próprio + rede própria + imagem `base` enxuta
+#     + inicialização idempotente. Porta 8000 (ASSUMPTION: 8000 livre no servidor
+#     de destino; NÃO usar na máquina dev, onde 8000 é do cloudpilot_backend e
+#     8001 é do cip-api integrado).
+#
+# Uso (servidor limpo):
+#   cp .env.prod.example .env.prod        # preencher LLM_* e EMBED_*
+#   podman compose -f docker-compose.prod.yml up -d --build
+#   podman compose -f docker-compose.prod.yml ps
+#   podman compose -f docker-compose.prod.yml exec cip-api \
+#     curl -fsS http://localhost:8000/health/ready
+#
+# Teardown (remove POSTGRES + VOLUME + REDE deste projeto tylko):
+#   podman compose -f docker-compose.prod.yml down -v
+# ─────────────────────────────────────────────────────────────────────────
+
+services:
+  # ─── Postgres PRÓPRIO do CIP (pgvector + pg16) ──────────────────────────
+  cip_postgres:
+    image: pgvector/pgvector:pg16
+    container_name: cip_postgres
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER:-cip}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?POSTGRES_PASSWORD must be set in .env.prod}
+      POSTGRES_DB: ${POSTGRES_DB:-cip}
+    volumes:
+      - cip_pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U cip -d cip"]
+      interval: 5s
+      timeout: 5s
+      retries: 12
+      start_period: 10s
+    networks:
+      - cip_prod_net
+
+  # ─── Bootstrap idempotente (schema + migrations + ingest) ───────────────
+  # Container efêmero: depende do Postgres SAUDÁVEL, roda o bootstrap e sai.
+  # `restart: "no"` garante que, se falhar, não fica em loop; o cip-api só
+  # sobe quando este sair com exit 0 (`condition: service_completed_successfully`).
+  cip-init:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      target: base
+    image: cip:prod
+    container_name: cip-init
+    restart: "no"
+    environment:
+      DATABASE_URL: ${DATABASE_URL:-postgresql://cip:${POSTGRES_PASSWORD}@cip_postgres:5432/cip}
+      DB_HOST: cip_postgres
+      DB_PORT: "5432"
+      DB_NAME: ${POSTGRES_DB:-cip}
+      DB_USER: ${POSTGRES_USER:-cip}
+      DB_PASSWORD: ${POSTGRES_PASSWORD:?POSTGRES_PASSWORD must be set in .env.prod}
+      # ─── Embeddings (LOCAL, CPU — ingest não usa API paga) ───
+      EMBED_PROVIDER: ${EMBED_PROVIDER:-local}
+      EMBED_MODEL: ${EMBED_MODEL:-intfloat/multilingual-e5-small}
+      EMBED_DIM: ${EMBED_DIM:-384}
+      EMBED_DEVICE: cpu
+    entrypoint: ["python", "scripts/bootstrap_prod.py"]
+    depends_on:
+      cip_postgres:
+        condition: service_healthy
+    networks:
+      - cip_prod_net
+
+  # ─── CIP API (imagem enxuta target `base`) ──────────────────────────────
+  cip-api:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      target: base
+    image: cip:prod
+    container_name: cip-api
+    restart: unless-stopped
+    environment:
+      DATABASE_URL: ${DATABASE_URL:-postgresql://cip:${POSTGRES_PASSWORD}@cip_postgres:5432/cip}
+      DB_HOST: cip_postgres
+      DB_PORT: "5432"
+      DB_NAME: ${POSTGRES_DB:-cip}
+      DB_USER: ${POSTGRES_USER:-cip}
+      DB_PASSWORD: ${POSTGRES_PASSWORD:?POSTGRES_PASSWORD must be set in .env.prod}
+      DB_POOL_SIZE: "20"
+      DB_MAX_OVERFLOW: "20"
+
+      # ─── LLM (defaults MiniMax M3; sobrescrever em .env.prod) ───
+      LLM_PROVIDER: ${LLM_PROVIDER:-minimax}
+      LLM_MODEL: ${LLM_MODEL:-MiniMax-M3}
+      LLM_BASE_URL: ${LLM_BASE_URL:-https://api.minimax.io/v1}
+      LLM_CONTEXT_SIZE: ${LLM_CONTEXT_SIZE:-1000000}
+      LLM_MAX_TOKENS: ${LLM_MAX_TOKENS:-131072}
+      LLM_TEMPERATURE: ${LLM_TEMPERATURE:-0.1}
+      LLM_TIMEOUT_S: ${LLM_TIMEOUT_S:-60}
+      LLM_MAX_RETRIES: ${LLM_MAX_RETRIES:-2}
+
+      # ─── Embeddings (deve CASAAR com o que o cip-init usou) ───
+      EMBED_PROVIDER: ${EMBED_PROVIDER:-local}
+      EMBED_MODEL: ${EMBED_MODEL:-intfloat/multilingual-e5-small}
+      EMBED_DIM: ${EMBED_DIM:-384}
+      EMBED_DEVICE: cpu
+
+      # ─── App ───
+      CIP_ENV: production
+      CIP_READONLY: "true"
+      LOG_LEVEL: ${LOG_LEVEL:-INFO}
+      PORT: "8000"
+
+      # ─── Concorrência ───
+      MAX_CONCURRENT_REQUESTS: "200"
+      REQUEST_TIMEOUT_S: "90"
+
+      # ─── Auth (multi-tenant) — definida em .env.prod ───
+      # CIP_API_KEYS: "key1:tenant1:60" (formato chave:tenant:rpm)
+    env_file:
+      - path: ./.env.prod
+        required: false
+    ports:
+      # ASSUMPTION: porta 8000 livre no servidor de destino. Se ocupada,
+      # mapear "HOST_PORT:8000" e ajustar o health check externo.
+      - "8000:8000"
+    depends_on:
+      cip-init:
+        condition: service_completed_successfully
+    healthcheck:
+      test: ["CMD", "curl", "-fsS", "http://localhost:8000/health/live"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 120s  # tempo de carregar embedding model + LLM
+    networks:
+      - cip_prod_net
+
+volumes:
+  cip_pgdata:
+    name: cip_pgdata
+
+networks:
+  cip_prod_net:
+    name: cip_prod_net

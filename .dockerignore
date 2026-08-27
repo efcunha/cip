@@ -1,0 +1,64 @@
+**/__pycache__
+**/*.pyc
+**/*.pyo
+**/.git
+**/.env
+**/.env.local
+**/.env.*.local
+**/.venv
+**/node_modules
+**/dist
+**/.next
+**/coverage
+**/*.egg-info
+
+# Railway / infra metadata
+*-deployments.json
+deployments.json
+railway_status.json
+runs.json
+
+# Celery state
+**/celerybeat-schedule
+
+# Logs e artefatos de CI/CD
+**/*.log
+**/logs/
+**/mypy_*.txt
+**/lint_output.txt
+**/typecheck_output.txt
+**/test_output.txt
+**/test_results.txt
+**/result.txt
+**/logs_backend.txt
+**/output.json
+**/run_*.json
+**/workflow_*.json
+
+# IDE e OS
+**/.vscode
+**/.idea
+**/.DS_Store
+**/Thumbs.db
+
+# Cache / artefatos locais (evita incluir no build context e
+# evita erros de "Acesso negado" de diretórios protegidos pelo sandbox).
+.pytest_cache/
+**/.pytest_cache/
+.ruff_cache/
+**/.ruff_cache/
+.coverage
+**/.coverage
+.audit/
+**/.audit/
+.tmp_*/
+**/.tmp_*/
+pip-build-tracker-*/
+pip-ephem-wheel-cache-*/
+pip-install-*/
+.code-review-graph/
+**/.code-review-graph/
+.kiro/
+**/.kiro/
+.playwright-mcp/
+**/.playwright-mcp/

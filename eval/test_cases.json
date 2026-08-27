@@ -1,0 +1,756 @@
+{
+  "rubric": {
+    "criteria": ["precisao_tecnica", "citacao_fonte", "praticidade", "trade_offs", "deteccao_erro"],
+    "scale": "1-5",
+    "acceptance_avg": 4.0
+  },
+  "cases": [
+    {
+      "id": "know-001",
+      "category": "conhecimento",
+      "cloud": "aws",
+      "question": "Qual a diferença entre Savings Plans e Reserved Instances na AWS?",
+      "must_mention": ["compute savings", "flexibilidade", "compromisso"]
+    },
+    {
+      "id": "know-002",
+      "category": "conhecimento",
+      "cloud": "aws",
+      "question": "Quando usar S3 Intelligent-Tiering em vez de lifecycle policies manuais?",
+      "must_mention": ["intelligent-tiering", "acesso imprevisível"]
+    },
+    {
+      "id": "know-003",
+      "category": "conhecimento",
+      "cloud": "gcp",
+      "question": "O que são Committed Use Discounts (CUDs) no GCP e quando compensam?",
+      "must_mention": ["cud", "compromisso", "desconto"]
+    },
+    {
+      "id": "know-004",
+      "category": "conhecimento",
+      "cloud": "azure",
+      "question": "Explique o pilar de Cost Optimization do Azure Well-Architected.",
+      "must_mention": ["well-architected", "custo"]
+    },
+    {
+      "id": "know-005",
+      "category": "conhecimento",
+      "cloud": "aws",
+      "question": "Como funciona o AWS Control Tower e quais seus benefícios para governança multi-conta?",
+      "must_mention": ["control tower", "landing zone", "guardrails", "multi-conta"]
+    },
+    {
+      "id": "know-006",
+      "category": "conhecimento",
+      "cloud": "gcp",
+      "question": "Descreva a hierarquia de recursos do GCP: Organization > Folder > Project. Como isso ajuda em políticas?",
+      "must_mention": ["organization", "folder", "project", "policy inheritance"]
+    },
+    {
+      "id": "know-007",
+      "category": "conhecimento",
+      "cloud": "azure",
+      "question": "O que são Azure Management Groups e como diferem de Resource Groups?",
+      "must_mention": ["management group", "resource group", "hierarquia", "governança"]
+    },
+    {
+      "id": "know-008",
+      "category": "conhecimento",
+      "cloud": "aws",
+      "question": "Explique o modelo de responsabilidade compartilhada da AWS para EC2 vs RDS vs Lambda.",
+      "must_mention": ["shared responsibility", "ec2", "rds", "lambda", "patch management"]
+    },
+    {
+      "id": "know-009",
+      "category": "conhecimento",
+      "cloud": "gcp",
+      "question": "Como funciona VPC Service Controls no GCP e que riscos mitiga?",
+      "must_mention": ["vpc service controls", "exfiltration", "perimeter", "data loss"]
+    },
+    {
+      "id": "know-010",
+      "category": "conhecimento",
+      "cloud": "azure",
+      "question": "O que é Azure Policy e como aplicar políticas de compliance (ex: tags obrigatórias)?",
+      "must_mention": ["azure policy", "compliance", "tags", "effect", "deny"]
+    },
+    {
+      "id": "know-011",
+      "category": "conhecimento",
+      "cloud": "aws",
+      "question": "Diferença entre Application Load Balancer, Network Load Balancer e Gateway Load Balancer.",
+      "must_mention": ["alb", "nlb", "gwlb", "layer 7", "layer 4", "tls termination"]
+    },
+    {
+      "id": "know-012",
+      "category": "conhecimento",
+      "cloud": "gcp",
+      "question": "Como configurar Cloud Armor para proteção DDoS e WAF no GCP?",
+      "must_mention": ["cloud armor", "waf", "ddos", "security policy", "rate limiting"]
+    },
+    {
+      "id": "know-013",
+      "category": "conhecimento",
+      "cloud": "azure",
+      "question": "Explique Azure Front Door vs Application Gateway: quando usar cada um?",
+      "must_mention": ["front door", "application gateway", "global", "regional", "waf"]
+    },
+    {
+      "id": "know-014",
+      "category": "conhecimento",
+      "cloud": "aws",
+      "question": "O que é AWS Config e como usar para detectar drift de conformidade?",
+      "must_mention": ["aws config", "drift", "compliance", "rules", "remediation"]
+    },
+    {
+      "id": "know-015",
+      "category": "conhecimento",
+      "cloud": "gcp",
+      "question": "Como funciona Binary Authorization no GKE e por que usar?",
+      "must_mention": ["binary authorization", "attestation", "gke", "supply chain", "admission controller"]
+    },
+    {
+      "id": "know-016",
+      "category": "conhecimento",
+      "cloud": "azure",
+      "question": "O que é Azure Private Link e como elimina exposição de PaaS na internet?",
+      "must_mention": ["private link", "private endpoint", "paas", "exfiltration"]
+    },
+    {
+      "id": "know-017",
+      "category": "conhecimento",
+      "cloud": "aws",
+      "question": "Como implementar disaster recovery multi-região para RDS PostgreSQL na AWS?",
+      "must_mention": ["rds", "read replica", "cross-region", "failover", "rpo", "rto"]
+    },
+    {
+      "id": "know-018",
+      "category": "conhecimento",
+      "cloud": "gcp",
+      "question": "Explique Cloud Spanner vs Cloud SQL: trade-offs de consistência vs escalabilidade.",
+      "must_mention": ["spanner", "cloud sql", "horizontal scaling", "strong consistency", "newsql"]
+    },
+    {
+      "id": "know-019",
+      "category": "conhecimento",
+      "cloud": "azure",
+      "question": "O que é Azure Cosmos DB e quais APIs/modelos de dados suporta?",
+      "must_mention": ["cosmos db", "multi-model", "sql api", "mongo api", "cassandra", "turnkey-value"]
+    },
+    {
+      "id": "know-020",
+      "category": "conhecimento",
+      "cloud": "aws",
+      "question": "Como usar AWS Trusted Advisor para otimizar custos, segurança e performance?",
+      "must_mention": ["trusted advisor", "cost optimization", "security", "performance", "service limits"]
+    },
+    {
+      "id": "know-021",
+      "category": "conhecimento",
+      "cloud": "gcp",
+      "question": "O que são Organization Policies no GCP e como restringir uso de recursos (ex: external IPs)?",
+      "must_mention": ["organization policies", "constraints", "external ip", "allowed regions"]
+    },
+    {
+      "id": "know-022",
+      "category": "conhecimento",
+      "cloud": "azure",
+      "question": "Explique Azure RBAC: como atribuir roles customizadas e usar Azure AD groups?",
+      "must_mention": ["rbac", "custom role", "azure ad group", "assignment", "scope"]
+    },
+    {
+      "id": "know-023",
+      "category": "conhecimento",
+      "cloud": "aws",
+      "question": "O que é AWS Systems Manager e como usar Session Manager para acesso sem SSH/RDP?",
+      "must_mention": ["systems manager", "session manager", "ssh", "rdp", "iam role"]
+    },
+    {
+      "id": "know-024",
+      "category": "conhecimento",
+      "cloud": "gcp",
+      "question": "Como funciona Cloud Logging + Cloud Monitoring no GCP para alertas baseados em logs?",
+      "must_mention": ["cloud logging", "cloud monitoring", "log-based metric", "alerting policy"]
+    },
+    {
+      "id": "know-025",
+      "category": "conhecimento",
+      "cloud": "azure",
+      "question": "O que é Azure Monitor e como configurar action groups para notificações?",
+      "must_mention": ["azure monitor", "action group", "alert rule", "notification"]
+    },
+    {
+      "id": "know-026",
+      "category": "conhecimento",
+      "cloud": "aws",
+      "question": "Explique ECS Fargate vs EC2 launch type: quando usar cada um?",
+      "must_mention": ["ecs", "fargate", "ec2 launch type", "serverless", "control plane"]
+    },
+    {
+      "id": "know-027",
+      "category": "conhecimento",
+      "cloud": "gcp",
+      "question": "O que é Cloud Run e como difere de Cloud Functions e GKE Autopilot?",
+      "must_mention": ["cloud run", "cloud functions", "gke autopilot", "knative", "scale to zero"]
+    },
+    {
+      "id": "know-028",
+      "category": "conhecimento",
+      "cloud": "azure",
+      "question": "Compare Azure Container Apps vs AKS: quando escolher cada um?",
+      "must_mention": ["container apps", "aks", "dapr", "keda", "managed kubernetes"]
+    },
+    {
+      "id": "know-029",
+      "category": "conhecimento",
+      "cloud": "aws",
+      "question": "Como funciona AWS Backup para proteção centralizada de EBS, RDS, EFS e DynamoDB?",
+      "must_mention": ["aws backup", "vault", "backup plan", "cross-region", "point-in-time"]
+    },
+    {
+      "id": "know-030",
+      "category": "conhecimento",
+      "cloud": "gcp",
+      "question": "Como usar Cloud Asset Inventory para governança e auditoria de recursos no GCP?",
+      "must_mention": ["cloud asset inventory", "asset", "policy analyzer", "export", "bigquery"]
+    },
+    {
+      "id": "know-031",
+      "category": "conhecimento",
+      "cloud": "azure",
+      "question": "O que é Azure Resource Graph e como consultar recursos em escala cross-subscription?",
+      "must_mention": ["resource graph", "kusto", "kql", "cross-subscription", "governance"]
+    },
+    {
+      "id": "know-032",
+      "category": "conhecimento",
+      "cloud": "aws",
+      "question": "Como implementar zero-trust network na AWS com VPC, Security Groups e NACLs?",
+      "must_mention": ["vpc", "security group", "nacl", "zero trust", "least privilege", "egress"]
+    },
+    {
+      "id": "know-033",
+      "category": "conhecimento",
+      "cloud": "gcp",
+      "question": "O que é Identity-Aware Proxy (IAP) no GCP e como proteger apps sem VPN?",
+      "must_mention": ["iap", "identity-aware proxy", "vpn", "oauth", "context-aware access"]
+    },
+    {
+      "id": "know-034",
+      "category": "conhecimento",
+      "cloud": "azure",
+      "question": "Explique Azure Conditional Access e como bloquear acesso de países não autorizados.",
+      "must_mention": ["conditional access", "mfa", "location", "block", "azure ad"]
+    },
+    {
+      "id": "know-035",
+      "category": "conhecimento",
+      "cloud": "aws",
+      "question": "O que é AWS Security Hub e como agregar findings de GuardDuty, Inspector, Config?",
+      "must_mention": ["security hub", "guardduty", "inspector", "config", "findings", "standards"]
+    },
+    {
+      "id": "know-036",
+      "category": "conhecimento",
+      "cloud": "gcp",
+      "question": "Como funciona Security Command Center (SCC) no GCP para detecção de ameaças?",
+      "must_mention": ["security command center", "scc", "threat detection", "vulnerability", "premium"]
+    },
+    {
+      "id": "know-037",
+      "category": "conhecimento",
+      "cloud": "azure",
+      "question": "O que é Microsoft Defender for Cloud e quais planos (CSPM, CWPP) oferece?",
+      "must_mention": ["defender for cloud", "cspm", "cwpp", "secure score", "recommendations"]
+    },
+    {
+      "id": "know-038",
+      "category": "conhecimento",
+      "cloud": "aws",
+      "question": "Como usar AWS Service Catalog para padronizar provisionamento de produtos aprovados?",
+      "must_mention": ["service catalog", "portfolio", "product", "constraints", "launch role"]
+    },
+    {
+      "id": "know-039",
+      "category": "conhecimento",
+      "cloud": "gcp",
+      "question": "O que é Deployment Manager vs Terraform no GCP: quando usar cada um?",
+      "must_mention": ["deployment manager", "terraform", "declarative", "state", "provider"]
+    },
+    {
+      "id": "know-040",
+      "category": "conhecimento",
+      "cloud": "azure",
+      "question": "Compare Bicep vs ARM Templates vs Terraform para IaC no Azure.",
+      "must_mention": ["bicep", "arm template", "terraform", "dsl", "type safety", "modules"]
+    },
+    {
+      "id": "know-041",
+      "category": "conhecimento",
+      "cloud": "aws",
+      "question": "Como configurar cross-account roles com AWS STS para acesso seguro entre contas?",
+      "must_mention": ["sts", "assume role", "external id", "trust policy", "session duration"]
+    },
+    {
+      "id": "know-042",
+      "category": "conhecimento",
+      "cloud": "gcp",
+      "question": "O que são Workload Identity Federation no GCP e como eliminar service account keys?",
+      "must_mention": ["workload identity", "federation", "service account key", "oidc", "github actions"]
+    },
+    {
+      "id": "know-043",
+      "category": "conhecimento",
+      "cloud": "azure",
+      "question": "Como usar Azure Managed Identities para acessar Key Vault e Storage sem secrets?",
+      "must_mention": ["managed identity", "system-assigned", "user-assigned", "key vault", "rbac"]
+    },
+    {
+      "id": "know-044",
+      "category": "conhecimento",
+      "cloud": "aws",
+      "question": "Explique AWS EventBridge: como criar event-driven architectures cross-account?",
+      "must_mention": ["eventbridge", "event bus", "rule", "target", "cross-account", "schema registry"]
+    },
+    {
+      "id": "know-045",
+      "category": "conhecimento",
+      "cloud": "gcp",
+      "question": "Como funciona Eventarc no GCP para conectar eventos de serviços a Cloud Run/Functions?",
+      "must_mention": ["eventarc", "cloud run", "cloud functions", "pub/sub", "event provider"]
+    },
+    {
+      "id": "know-046",
+      "category": "conhecimento",
+      "cloud": "azure",
+      "question": "O que é Azure Event Grid vs Event Hubs vs Service Bus: quando usar cada?",
+      "must_mention": ["event grid", "event hubs", "service bus", "pub/sub", "messaging", "routing"]
+    },
+    {
+      "id": "know-047",
+      "category": "conhecimento",
+      "cloud": "aws",
+      "question": "Como usar AWS Compute Optimizer para right-sizing de EC2, EBS, Lambda e ECS?",
+      "must_mention": ["compute optimizer", "right-sizing", "ec2", "ebs", "lambda", "ecs", "savings"]
+    },
+    {
+      "id": "know-048",
+      "category": "conhecimento",
+      "cloud": "gcp",
+      "question": "O que é GCP Recommender e como aplicar recomendações de Idle Resources, Commitment, IAM?",
+      "must_mention": ["recommender", "idle", "commitment", "iam", "insight", "apply"]
+    },
+    {
+      "id": "know-049",
+      "category": "conhecimento",
+      "cloud": "azure",
+      "question": "Como usar Azure Advisor para recomendações de custo, segurança, confiabilidade e performance?",
+      "must_mention": ["advisor", "cost", "security", "reliability", "performance", "operational excellence"]
+    },
+    {
+      "id": "know-050",
+      "category": "conhecimento",
+      "cloud": "aws",
+      "question": "Explique a diferença entre AWS Organizations SCPs vs IAM Policies vs Permission Boundaries.",
+      "must_mention": ["scp", "iam policy", "permission boundary", "maximum permissions", "guardrails"]
+    },
+    {
+      "id": "know-051",
+      "category": "conhecimento",
+      "cloud": "gcp",
+      "question": "Como funciona VPC Peering vs Shared VPC no GCP: trade-offs e limites?",
+      "must_mention": ["vpc peering", "shared vpc", "host project", "service project", "transitive peering"]
+    },
+    {
+      "id": "know-052",
+      "category": "conhecimento",
+      "cloud": "azure",
+      "question": "O que é Azure Virtual WAN e como simplifica conectividade branch-to-cloud e vnet-to-vnet?",
+      "must_mention": ["virtual wan", "hub", "spoke", "vpn", "expressroute", "sd-wan"]
+    },
+    {
+      "id": "know-053",
+      "category": "conhecimento",
+      "cloud": "aws",
+      "question": "Como implementar canary deployments no AWS CodeDeploy ou App Mesh?",
+      "must_mention": ["codedeploy", "app mesh", "canary", "traffic shifting", "lambda", "ecs"]
+    },
+    {
+      "id": "know-054",
+      "category": "conhecimento",
+      "cloud": "gcp",
+      "question": "O que é Cloud Deploy no GCP e como gerenciar pipelines de entrega contínua multi-target?",
+      "must_mention": ["cloud deploy", "delivery pipeline", "target", "rollout", "canary", "promotion"]
+    },
+    {
+      "id": "know-055",
+      "category": "conhecimento",
+      "cloud": "azure",
+      "question": "Como configurar Azure DevOps Pipelines ou GitHub Actions para deploy em AKS com aprovação manual?",
+      "must_mention": ["azure devops", "github actions", "aks", "environment", "approval", "helm"]
+    },
+    {
+      "id": "know-056",
+      "category": "conhecimento",
+      "cloud": "aws",
+      "question": "O que é AWS Fault Injection Simulator (FIS) e como testar resiliência de aplicações?",
+      "must_mention": ["fis", "fault injection", "chaos engineering", "experiment", "target", "stop condition"]
+    },
+    {
+      "id": "know-057",
+      "category": "conhecimento",
+      "cloud": "gcp",
+      "question": "Como usar Chaos Engineering no GCP com Krkn ou LitmusChaos em GKE?",
+      "must_mention": ["chaos engineering", "gke", "krkn", "litmus", "experiment", "resilience"]
+    },
+    {
+      "id": "know-058",
+      "category": "conhecimento",
+      "cloud": "azure",
+      "question": "O que é Azure Chaos Studio e como injetar falhas (CPU, network, disk) em VMs/AKS?",
+      "must_mention": ["chaos studio", "experiment", "fault", "aks", "vm", "target"]
+    },
+    {
+      "id": "know-059",
+      "category": "conhecimento",
+      "cloud": "aws",
+      "question": "Como usar AWS Config Rules custom (Lambda) para validar tags obrigatórias em recursos?",
+      "must_mention": ["config rule", "lambda", "custom rule", "tags", "compliance", "remediation"]
+    },
+    {
+      "id": "know-060",
+      "category": "conhecimento",
+      "cloud": "gcp",
+      "question": "Como auditar mudanças em IAM policies no GCP usando Cloud Audit Logs + BigQuery?",
+      "must_mention": ["audit logs", "bigquery", "iam policy", "data access", "log sink", "analytics"]
+    },
+    {
+      "id": "cost-001",
+      "category": "custo",
+      "cloud": "aws",
+      "question": "Analise meu ambiente AWS e diga onde economizar cerca de US$ 5 mil/mês.",
+      "expects_tools": true
+    },
+    {
+      "id": "cost-002",
+      "category": "custo",
+      "cloud": "gcp",
+      "question": "Meu bill do BigQuery subiu 40%. Como investigo e reduzo?",
+      "must_mention": ["slots", "particionamento", "bytes lidos"]
+    },
+    {
+      "id": "cost-003",
+      "category": "custo",
+      "cloud": "azure",
+      "question": "Como identificar VMs órfãs e discos não anexados no Azure para reduzir custos?",
+      "must_mention": ["orphan", "disk", "vm", "advisor", "cost"]
+    },
+    {
+      "id": "cost-004",
+      "category": "custo",
+      "cloud": "aws",
+      "question": "Quais as melhores práticas para otimizar custos de Data Transfer na AWS (inter-AZ, internet, CloudFront)?",
+      "must_mention": ["data transfer", "inter-az", "cloudfront", "vpc endpoint", "s3 transfer acceleration"]
+    },
+    {
+      "id": "cost-005",
+      "category": "custo",
+      "cloud": "gcp",
+      "question": "Como usar GCP Recommender para identificar commitment opportunities (CUDs) e right-sizing?",
+      "must_mention": ["recommender", "cud", "right-sizing", "commitment", "insight"]
+    },
+    {
+      "id": "cost-006",
+      "category": "custo",
+      "cloud": "azure",
+      "question": "Explique Azure Hybrid Benefit e como aplicar licenças Windows/SQL existentes no Azure.",
+      "must_mention": ["hybrid benefit", "windows server", "sql server", "license", "cost savings"]
+    },
+    {
+      "id": "cost-007",
+      "category": "custo",
+      "cloud": "aws",
+      "question": "Como configurar S3 Storage Lens para analisar padrões de acesso e otimizar storage classes?",
+      "must_mention": ["s3 storage lens", "storage class", "intelligent-tiering", "analytics", "dashboard"]
+    },
+    {
+      "id": "cost-008",
+      "category": "custo",
+      "cloud": "gcp",
+      "question": "O que é FinOps no GCP e como implementar showback/chargeback por projeto/label?",
+      "must_mention": ["finops", "billing export", "bigquery", "labels", "showback", "chargeback"]
+    },
+    {
+      "id": "cost-009",
+      "category": "custo",
+      "cloud": "azure",
+      "question": "Como usar Azure Cost Management para criar budgets, alerts e exportar dados para Power BI?",
+      "must_mention": ["cost management", "budget", "alert", "export", "power bi", "cost allocation"]
+    },
+    {
+      "id": "cost-010",
+      "category": "custo",
+      "cloud": "aws",
+      "question": "Quais as diferenças entre Compute Savings Plans, EC2 Instance Savings Plans e RIs? Quando cada um?",
+      "must_mention": ["compute savings plan", "ec2 instance savings plan", "ri", "flexibility", "coverage"]
+    },
+    {
+      "id": "iac-001",
+      "category": "iac_review",
+      "cloud": "aws",
+      "question": "Revise este Terraform e aponte riscos de segurança e custo.",
+      "iac_payload": "resource \"aws_s3_bucket\" \"data\" {\n  bucket = \"my-data\"\n}\nresource \"aws_security_group\" \"web\" {\n  ingress {\n    from_port = 22\n    to_port = 22\n    protocol = \"tcp\"\n    cidr_blocks = [\"0.0.0.0/0\"]\n  }\n}\n",
+      "must_find_severity": ["critical", "high"]
+    },
+    {
+      "id": "iac-002",
+      "category": "iac_review",
+      "cloud": "azure",
+      "question": "Revise este manifesto Kubernetes.",
+      "iac_payload": "apiVersion: apps/v1\nkind: Deployment\nmetadata:\n  name: api\nspec:\n  template:\n    spec:\n      containers:\n        - name: api\n          image: myrepo/api:latest\n          securityContext:\n            privileged: true\n",
+      "must_find_severity": ["critical", "medium"]
+    },
+    {
+      "id": "iac-003",
+      "category": "iac_review",
+      "cloud": "aws",
+      "question": "Revise este Terraform RDS.",
+      "iac_payload": "resource \"aws_db_instance\" \"main\" {\n  engine               = \"postgres\"\n  instance_class       = \"db.r6g.2xlarge\"\n  allocated_storage    = 100\n  skip_final_snapshot  = true\n  deletion_protection  = false\n  publicly_accessible  = true\n}\n",
+      "must_find_severity": ["critical", "high"]
+    },
+    {
+      "id": "iac-004",
+      "category": "iac_review",
+      "cloud": "gcp",
+      "question": "Revise este Terraform GKE.",
+      "iac_payload": "resource \"google_container_cluster\" \"main\" {\n  name     = \"my-gke\"\n  location = \"us-central1\"\n  remove_default_node_pool = true\n  initial_node_count = 1\n  master_authorized_networks_config {\n    cidr_blocks = []\n  }\n}\n",
+      "must_find_severity": ["high", "medium"]
+    },
+    {
+      "id": "iac-005",
+      "category": "iac_review",
+      "cloud": "azure",
+      "question": "Revise este AKS.",
+      "iac_payload": "resource \"azurerm_kubernetes_cluster\" \"main\" {\n  name                = \"my-aks\"\n  location            = \"East US\"\n  dns_prefix          = \"aks\"\n  default_node_pool {\n    name       = \"default\"\n    vm_size    = \"Standard_D2s_v3\"\n    enable_auto_scaling = false\n  }\n  role_based_access_control {\n    enabled = false\n  }\n}\n",
+      "must_find_severity": ["critical", "high"]
+    },
+    {
+      "id": "iac-006",
+      "category": "iac_review",
+      "cloud": "aws",
+      "question": "Revise este Terraform Lambda.",
+      "iac_payload": "resource \"aws_lambda_function\" \"api\" {\n  function_name = \"api\"\n  runtime       = \"python3.9\"\n  handler       = \"index.handler\"\n  role          = aws_iam_role.lambda.arn\n  vpc_config {\n    subnet_ids = [aws_subnet.private.id]\n  }\n  environment {\n    variables = {\n      DB_PASSWORD = \"supersecret123\"\n    }\n  }\n}\n",
+      "must_find_severity": ["critical", "high"]
+    },
+    {
+      "id": "iac-007",
+      "category": "iac_review",
+      "cloud": "gcp",
+      "question": "Revise este Cloud Run.",
+      "iac_payload": "resource \"google_cloud_run_v2_service\" \"api\" {\n  name     = \"api\"\n  location = \"us-central1\"\n  template {\n    containers {\n      image = \"gcr.io/project/api:latest\"\n      env {\n        name  = \"API_KEY\"\n        value = \"hardcoded-secret\"\n      }\n    }\n  }\n  traffics {\n    percent = 100\n    latest_revision = true\n  }\n}\n",
+      "must_find_severity": ["critical", "high"]
+    },
+    {
+      "id": "iac-008",
+      "category": "iac_review",
+      "cloud": "azure",
+      "question": "Revise este Container App.",
+      "iac_payload": "resource \"azurerm_container_app\" \"api\" {\n  name                = \"api\"\n  resource_group_name = azurerm_resource_group.rg.name\n  managed_environment_id = azurerm_container_app_managed_environment.env.id\n  configuration {\n    ingress {\n      external_enabled = true\n      target_port      = 8080\n    }\n    secrets {\n      name  = \"db-password\"\n      value = \"plaintext-password\"\n    }\n  }\n}\n",
+      "must_find_severity": ["critical", "high"]
+    },
+    {
+      "id": "iac-009",
+      "category": "iac_review",
+      "cloud": "aws",
+      "question": "Revise este Terraform ECS.",
+      "iac_payload": "resource \"aws_ecs_service\" \"api\" {\n  name            = \"api\"\n  cluster         = aws_ecs_cluster.main.arn\n  task_definition = aws_ecs_task_definition.api.arn\n  desired_count   = 1\n  deployment_controller {\n    type = \"ECS\"\n  }\n}\nresource \"aws_ecs_task_definition\" \"api\" {\n  family                   = \"api\"\n  network_mode             = \"bridge\"\n  container_definitions    = jsonencode([{ name = \"api\", image = \"api:latest\", cpu = 1024, memory = 2048 }])\n}\n",
+      "must_find_severity": ["high", "medium"]
+    },
+    {
+      "id": "iac-010",
+      "category": "iac_review",
+      "cloud": "multi",
+      "question": "Revise este Terraform multi-cloud (S3 + Blob Storage + GCS).",
+      "iac_payload": "resource \"aws_s3_bucket\" \"data\" { bucket = \"data\" }\nresource \"azurerm_storage_account\" \"data\" { name = \"data\" account_tier = \"Standard\" account_replication_type = \"LRS\" }\nresource \"google_storage_bucket\" \"data\" { name = \"data\" location = \"US\" }\n",
+      "must_find_severity": ["high", "medium"]
+    },
+    {
+      "id": "compare-001",
+      "category": "comparacao",
+      "question": "Quando escolher GKE vs EKS vs AKS? Compare em tabela.",
+      "must_mention": ["gke", "eks", "aks"]
+    },
+    {
+      "id": "compare-002",
+      "category": "comparacao",
+      "question": "Compare serverless containers: AWS Fargate vs Cloud Run vs Azure Container Apps.",
+      "must_mention": ["fargate", "cloud run", "container apps", "scale to zero", "pricing"]
+    },
+    {
+      "id": "compare-003",
+      "category": "comparacao",
+      "question": "Compare object storage: S3 vs Blob Storage vs Cloud Storage (classes, lifecycle, pricing).",
+      "must_mention": ["s3", "blob storage", "cloud storage", "storage class", "lifecycle"]
+    },
+    {
+      "id": "compare-004",
+      "category": "comparacao",
+      "question": "Compare managed PostgreSQL: RDS vs Cloud SQL vs Azure Database for PostgreSQL.",
+      "must_mention": ["rds", "cloud sql", "azure database for postgresql", "high availability", "read replica"]
+    },
+    {
+      "id": "compare-005",
+      "category": "comparacao",
+      "question": "Compare message queues: SQS/SNS vs Pub/Sub vs Service Bus/Event Hubs.",
+      "must_mention": ["sqs", "sns", "pub/sub", "service bus", "event hubs", "ordering", "dead letter"]
+    },
+    {
+      "id": "sec-001",
+      "category": "seguranca",
+      "cloud": "aws",
+      "question": "Revise a postura de IAM de uma conta AWS: o que procurar primeiro?",
+      "must_mention": ["menor privilégio", "mfa", "chaves de acesso"]
+    },
+    {
+      "id": "sec-002",
+      "category": "seguranca",
+      "cloud": "gcp",
+      "question": "Como detectar service accounts com roles excessivas (ex: Owner, Editor) no GCP?",
+      "must_mention": ["service account", "role", "owner", "editor", "recommender", "iam"]
+    },
+    {
+      "id": "sec-003",
+      "category": "seguranca",
+      "cloud": "azure",
+      "question": "O que é Privileged Identity Management (PIM) no Azure AD e como configurar just-in-time access?",
+      "must_mention": ["pim", "privileged identity management", "jit", "azure ad", "eligible"]
+    },
+    {
+      "id": "sec-004",
+      "category": "seguranca",
+      "cloud": "aws",
+      "question": "Como usar AWS Macie para descobrir dados sensíveis (PII) em buckets S3?",
+      "must_mention": ["macie", "pii", "sensitive data", "s3", "classification", "findings"]
+    },
+    {
+      "id": "sec-005",
+      "category": "seguranca",
+      "cloud": "gcp",
+      "question": "Como configurar Data Loss Prevention (DLP) API no GCP para mascarar PII em logs?",
+      "must_mention": ["dlp", "pii", "de-identify", "inspect", "mask", "transform"]
+    },
+    {
+      "id": "sec-006",
+      "category": "seguranca",
+      "cloud": "azure",
+      "question": "O que é Microsoft Purview Information Protection e como classificar/rotular dados sensíveis?",
+      "must_mention": ["purview", "information protection", "sensitivity label", "classification", "auto-labeling"]
+    },
+    {
+      "id": "sec-007",
+      "category": "seguranca",
+      "cloud": "aws",
+      "question": "Como usar AWS WAF + Shield Advanced para proteger ALB/CloudFront contra OWASP Top 10 e DDoS?",
+      "must_mention": ["waf", "shield", "alb", "cloudfront", "owasp", "rate limiting", "managed rules"]
+    },
+    {
+      "id": "sec-008",
+      "category": "seguranca",
+      "cloud": "gcp",
+      "question": "Como configurar Cloud Armor WAF rules customizadas para bloquear SQL injection e XSS?",
+      "must_mention": ["cloud armor", "waf", "custom rule", "sql injection", "xss", "regex"]
+    },
+    {
+      "id": "sec-009",
+      "category": "seguranca",
+      "cloud": "azure",
+      "question": "Como usar Azure Front Door WAF com managed rules e custom rules para proteger APIs?",
+      "must_mention": ["front door", "waf", "managed rule", "custom rule", "rate limit", "geo filter"]
+    },
+    {
+      "id": "sec-010",
+      "category": "seguranca",
+      "cloud": "aws",
+      "question": "Explique AWS Network Firewall vs Security Groups vs NACLs: quando usar cada?",
+      "must_mention": ["network firewall", "security group", "nacl", "stateful", "stateless", "inspection"]
+    },
+    {
+      "id": "arch-001",
+      "category": "software_architecture",
+      "cloud": null,
+      "question": "Quando usar microservices em vez de monolito? Liste os trade-offs principais.",
+      "must_mention": ["monolito", "microsserviço", "trade-off", "complexidade", "deploy"]
+    },
+    {
+      "id": "arch-002",
+      "category": "software_architecture",
+      "cloud": null,
+      "question": "Explique o padrão Circuit Breaker e em que cenário aplicá-lo.",
+      "must_mention": ["circuit breaker", "fechado", "aberto", "half-open", "resiliência"]
+    },
+    {
+      "id": "arch-003",
+      "category": "software_architecture",
+      "cloud": null,
+      "question": "Diferença entre CQRS e CRUD tradicional. Quando aplicar CQRS?",
+      "must_mention": ["cqrs", "command", "query", "separação", "escrita", "leitura"]
+    },
+    {
+      "id": "arch-004",
+      "category": "software_architecture",
+      "cloud": null,
+      "question": "Como o padrão Saga resolve transações distribuídas? Dê um exemplo com orquestração vs coreografia.",
+      "must_mention": ["saga", "orquestração", "coreografia", "transação distribuída", "compensa"]
+    },
+    {
+      "id": "arch-005",
+      "category": "software_architecture",
+      "cloud": null,
+      "question": "O que é Event Sourcing e quais as implicações de usá-lo com CQRS?",
+      "must_mention": ["event sourcing", "cqrs", "evento", "replay", "snapshot"]
+    },
+    {
+      "id": "arch-006",
+      "category": "software_architecture",
+      "cloud": null,
+      "question": "Explique Bounded Context (DDD) e sua relação com microsserviços.",
+      "must_mention": ["bounded context", "domínio", "contexto", "ddd", "microsserviço"]
+    },
+    {
+      "id": "cases-001",
+      "category": "case_studies",
+      "cloud": "aws",
+      "question": "Quais lições aprendidas do incidente do AWS S3 US-EAST-1 em fevereiro de 2017?",
+      "must_mention": ["typo", "playbook", "degradação", "comando", "billing"]
+    },
+    {
+      "id": "cases-002",
+      "category": "case_studies",
+      "cloud": "aws",
+      "question": "Que lições o incident do AWS Kinesis (2021) deixou sobre event storms?",
+      "must_mention": ["backpressure", "retry", "exponential backoff", "circuit breaker", "quota"]
+    },
+    {
+      "id": "cases-003",
+      "category": "case_studies",
+      "cloud": "multi",
+      "question": "Que lições o caso Netflix Spark + Kafka deixa sobre pipelines de eventos em escala?",
+      "must_mention": ["schema evolution", "backpressure", "idempotência", "kafka", "spark"]
+    },
+    {
+      "id": "cases-004",
+      "category": "case_studies",
+      "cloud": "multi",
+      "question": "Discuta lições aprendidas do incident do Cloudflare (30 de novembro de 2022).",
+      "must_mention": ["config", "deploy", "regressão", "feature flag", "rollback"]
+    },
+    {
+      "id": "cases-005",
+      "category": "case_studies",
+      "cloud": "aws",
+      "question": "Como o caso GitLab.com database outage de 2017 mudou práticas de backup e DR?",
+      "must_mention": ["backup", "replicação", "dr runbook", "postmortem", "transparência"]
+    }
+  ]
+}

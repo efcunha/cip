@@ -1,0 +1,135 @@
+# ── Python ────────────────────────────────────────────────────────────────────
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.claude/
+.codebuddy/
+.gemini/
+.qoder/
+.cursorrules/
+.Python
+.github/
+.windsurf/
+.agents/
+.clinerules/
+.cursor/
+.opencode/
+.venv/
+.hypothesis/
+venv/
+env/
+.tmp_pip/
+*.egg-info/
+dist/
+build/
+.kiro/
+.vscode/
+.eggs/
+.devcontainer/
+.mypy_cache/
+.ruff_cache/
+.pytest_cache/
+.tmp_test/
+.tmp_*.py
+.coverage
+htmlcov/
+.playwright-mcp/
+backend/tests/**/__pycache__/
+backend/tests/**/*.pyc
+backend/tests/**/.pytest_cache/
+.local/
+hyperdx/
+.tmp/
+
+# ── Environment ───────────────────────────────────────────────────────────────
+.env
+.env.prod
+.env.local
+.env.development
+.env.production
+.env.*.local
+.env.9router
+*.env.local
+*.env.production
+backend/tests/
+backend/.env
+backend/.env.local
+backend/.env.production
+backend/.env.development
+frontend/.env
+frontend/.env.local
+frontend/.env.production
+frontend/test-results
+.codex/
+.jira-config.json
+_lixo/
+.omp/
+.playwright-mcp/
+.windsurfrules
+.mcp.json
+.cursorrules
+
+# ── Node / Frontend ───────────────────────────────────────────────────────────
+node_modules/
+frontend/dist/
+frontend/.vite/
+*.tsbuildinfo
+# frontend/src/routeTree.gen.ts  # committed — needed for CI type-check
+
+# ── IDE ───────────────────────────────────────────────────────────────────────
+.vscode/settings.json
+.idea/
+*.swp
+*.swo
+.DS_Store
+Thumbs.db
+
+# ── Docker ────────────────────────────────────────────────────────────────────
+.docker/
+
+# ── Alembic ───────────────────────────────────────────────────────────────────
+backend/migrations/versions/*.pyc
+backend/celerybeat-schedule
+
+# ── Scripts sensíveis ─────────────────────────────────────────────────────────
+
+# ── Backups / dumps / estado local de homologação ─────────────────────────────
+.local-backups/
+*.dump
+*.sql.gz
+*.pgdump
+sync_state.json
+.sync-timestamp
+homologation/
+
+# ── Infra metadata ────────────────────────────────────────────────────────────
+*-deployments.json
+deployments.json
+runs.json
+opencode.json
+AGENTS.md
+
+# ── Logs e artefatos de CI/CD ─────────────────────────────────────────────────
+*.log
+*.png
+logs/
+# outputs de lint/typecheck/test
+backend/mypy_*.txt
+frontend/*.txt
+
+# outputs de workflows
+frontend/output.json
+frontend/run_*.json
+frontend/workflow_*.json
+
+# ── RTK (token optimization) ─────────────────────────────────────────────────
+.rtk/
+
+*.bak
+opencode.bak
+backend/measure.py
+# Added by code-review-graph
+.code-review-graph/
+
+

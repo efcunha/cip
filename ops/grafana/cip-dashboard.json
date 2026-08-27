@@ -1,0 +1,146 @@
+{
+  "annotations": {"list": []},
+  "editable": true,
+  "graphTooltip": 0,
+  "title": "CIP — Chat & Feedback",
+  "tags": ["cip", "chat", "feedback", "round-22"],
+  "timezone": "browser",
+  "time": {"from": "now-24h", "to": "now"},
+  "refresh": "30s",
+  "schemaVersion": 38,
+  "panels": [
+    {
+      "id": 1,
+      "title": "Conversas criadas (24h)",
+      "type": "stat",
+      "datasource": {"type": "prometheus", "uid": "prometheus"},
+      "gridPos": {"h": 4, "w": 6, "x": 0, "y": 0},
+      "targets": [
+        {
+          "expr": "sum(increase(cip_conversations_created_total[24h]))",
+          "legendFormat": "conversations"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "color": {"mode": "thresholds"},
+          "thresholds": {"mode": "absolute", "steps": [{"color": "green", "value": null}]}
+        }
+      },
+      "options": {
+        "reduceOptions": {"calcs": ["lastNotNull"]},
+        "colorMode": "value"
+      }
+    },
+    {
+      "id": 2,
+      "title": "Mensagens por role (24h)",
+      "type": "timeseries",
+      "datasource": {"type": "prometheus", "uid": "prometheus"},
+      "gridPos": {"h": 8, "w": 12, "x": 6, "y": 0},
+      "targets": [
+        {
+          "expr": "sum by (role) (increase(cip_messages_created_total[5m]))",
+          "legendFormat": "{{role}}"
+        }
+      ],
+      "fieldConfig": {"defaults": {"unit": "short"}}
+    },
+    {
+      "id": 3,
+      "title": "Feedback 👍/👎 ratio (24h)",
+      "type": "gauge",
+      "datasource": {"type": "prometheus", "uid": "prometheus"},
+      "gridPos": {"h": 8, "w": 6, "x": 0, "y": 4},
+      "targets": [
+        {
+          "expr": "sum(increase(cip_feedback_total{feedback=\"down\"}[24h])) / clamp_min(sum(increase(cip_feedback_total[24h])), 1)",
+          "legendFormat": "👎 ratio"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "percentunit",
+          "min": 0,
+          "max": 1,
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {"color": "green", "value": null},
+              {"color": "yellow", "value": 0.1},
+              {"color": "red", "value": 0.3}
+            ]
+          }
+        }
+      }
+    },
+    {
+      "id": 4,
+      "title": "Latência p95 por operação (chat_message)",
+      "type": "timeseries",
+      "datasource": {"type": "prometheus", "uid": "prometheus"},
+      "gridPos": {"h": 8, "w": 12, "x": 6, "y": 8},
+      "targets": [
+        {
+          "expr": "histogram_quantile(0.95, sum by (le, tenant_id) (rate(cip_chat_latency_seconds_bucket{operation=\"chat_message\"}[5m])))",
+          "legendFormat": "p95 {{tenant_id}}"
+        }
+      ],
+      "fieldConfig": {"defaults": {"unit": "s"}}
+    },
+    {
+      "id": 5,
+      "title": "Feedback 👎 por specialist (top 10)",
+      "type": "table",
+      "datasource": {"type": "postgres", "uid": "cip-postgres"},
+      "gridPos": {"h": 8, "w": 12, "x": 0, "y": 12},
+      "targets": [
+        {
+          "rawSql": "SELECT plan->>'specialists' AS specialist, count(*) AS feedback_down, count(*) FILTER (WHERE feedback = 'up') AS feedback_up, round(100.0 * count(*) FILTER (WHERE feedback = 'down') / nullif(count(*), 0), 1) AS pct_down FROM messages WHERE role = 'assistant' AND feedback IS NOT NULL AND created_at > now() - interval '24 hours' GROUP BY 1 ORDER BY feedback_down DESC LIMIT 10",
+          "format": "table"
+        }
+      ]
+    },
+    {
+      "id": 6,
+      "title": "Custo total estimado (24h)",
+      "type": "stat",
+      "datasource": {"type": "postgres", "uid": "cip-postgres"},
+      "gridPos": {"h": 4, "w": 6, "x": 12, "y": 12},
+      "targets": [
+        {
+          "rawSql": "SELECT round(sum(cost_estimated_usd)::numeric, 2) AS total_cost_usd FROM messages WHERE created_at > now() - interval '24 hours'",
+          "format": "table"
+        }
+      ],
+      "fieldConfig": {"defaults": {"unit": "currencyUSD"}}
+    },
+    {
+      "id": 7,
+      "title": "Conversas mais longas (top 10)",
+      "type": "table",
+      "datasource": {"type": "postgres", "uid": "cip-postgres"},
+      "gridPos": {"h": 8, "w": 12, "x": 0, "y": 20},
+      "targets": [
+        {
+          "rawSql": "SELECT c.id, c.title, count(m.id) AS n_messages, max(m.created_at) AS last_message_at FROM conversations c JOIN messages m ON m.conversation_id = c.id WHERE c.tenant_id = '$tenant' GROUP BY c.id, c.title ORDER BY n_messages DESC LIMIT 10",
+          "format": "table"
+        }
+      ]
+    }
+  ],
+  "templating": {
+    "list": [
+      {
+        "name": "tenant",
+        "type": "query",
+        "datasource": {"type": "postgres", "uid": "cip-postgres"},
+        "query": "SELECT DISTINCT tenant_id FROM conversations ORDER BY tenant_id",
+        "refresh": 1,
+        "includeAll": true,
+        "multi": true
+      }
+    ]
+  },
+  "time": {"from": "now-24h", "to": "now"}
+}

@@ -1,0 +1,76 @@
+{
+  "Version": "2012-10-17",
+  "Statement": [
+    {
+      "Sid": "CostReadOnly",
+      "Effect": "Allow",
+      "Action": [
+        "ce:GetCostAndUsage",
+        "ce:GetCostForecast",
+        "ce:GetRightsizingRecommendation",
+        "ce:GetSavingsPlansPurchaseRecommendation",
+        "ce:GetReservationPurchaseRecommendation",
+        "ce:ListCostCategoryDefinitions"
+      ],
+      "Resource": "*"
+    },
+    {
+      "Sid": "InventoryReadOnly",
+      "Effect": "Allow",
+      "Action": [
+        "ec2:DescribeInstances",
+        "ec2:DescribeVolumes",
+        "ec2:DescribeSnapshots",
+        "ec2:DescribeAddresses",
+        "ec2:DescribeSecurityGroups",
+        "rds:DescribeDBInstances",
+        "s3:ListAllMyBuckets",
+        "s3:GetBucketPublicAccessBlock",
+        "s3:GetEncryptionConfiguration",
+        "lambda:ListFunctions",
+        "eks:ListClusters",
+        "eks:DescribeCluster",
+        "iam:GetAccountSummary",
+        "iam:ListUsers",
+        "iam:GenerateCredentialReport",
+        "iam:GetCredentialReport"
+      ],
+      "Resource": "*"
+    },
+    {
+      "Sid": "SecurityPostureReadOnly",
+      "Effect": "Allow",
+      "Action": [
+        "securityhub:GetFindings",
+        "guardduty:ListDetectors",
+        "guardduty:ListFindings",
+        "config:DescribeConfigRules",
+        "cloudtrail:DescribeTrails"
+      ],
+      "Resource": "*"
+    },
+    {
+      "Sid": "DenyAllMutations",
+      "Effect": "Deny",
+      "NotAction": [
+        "ce:Get*",
+        "ce:List*",
+        "ec2:Describe*",
+        "rds:Describe*",
+        "s3:List*",
+        "s3:Get*",
+        "lambda:List*",
+        "eks:List*",
+        "eks:Describe*",
+        "iam:Get*",
+        "iam:List*",
+        "iam:Generate*",
+        "securityhub:Get*",
+        "guardduty:List*",
+        "config:Describe*",
+        "cloudtrail:Describe*"
+      ],
+      "Resource": "*"
+    }
+  ]
+}

@@ -1,0 +1,912 @@
+# Fontes de conhecimento por cloud, agrupadas por escopo de ingestão.
+#
+#   scope: mvp  -> apenas frameworks (Well-Architected / Architecture Framework)
+#   scope: full -> mvp + docs dos serviços principais
+#
+# Cada entrada vira metadados no cloud_docs (cloud, service, category, source, framework).
+# URLs validadas via scripts/build_sources.py (todas retornam HTTP 2xx).
+# ATENÇÃO: respeite os termos de uso / robots.txt de cada site ao coletar.
+
+mvp:
+  aws:
+    - source: aws-well-architected
+      framework: well-architected
+      service: well-architected
+      category: governance
+      doc_type: whitepaper
+      urls:
+        - https://docs.aws.amazon.com/wellarchitected/latest/framework/welcome.html
+        - https://docs.aws.amazon.com/wellarchitected/latest/cost-optimization-pillar/welcome.html
+        - https://docs.aws.amazon.com/wellarchitected/latest/security-pillar/welcome.html
+        - https://docs.aws.amazon.com/wellarchitected/latest/reliability-pillar/welcome.html
+        - https://docs.aws.amazon.com/wellarchitected/latest/operational-excellence-pillar/welcome.html
+        - https://docs.aws.amazon.com/wellarchitected/latest/performance-efficiency-pillar/welcome.html
+        - https://docs.aws.amazon.com/wellarchitected/latest/sustainability-pillar/sustainability-pillar.html
+  gcp:
+    - source: gcp-architecture-framework
+      framework: architecture-framework
+      service: architecture-framework
+      category: governance
+      doc_type: whitepaper
+      urls:
+        - https://docs.cloud.google.com/architecture/framework
+        - https://docs.cloud.google.com/architecture/framework/security
+        - https://docs.cloud.google.com/architecture/framework/reliability
+        - https://docs.cloud.google.com/architecture/framework/cost-optimization
+        - https://docs.cloud.google.com/architecture/framework/operational-excellence
+        - https://docs.cloud.google.com/architecture/framework/performance-optimization
+  azure:
+    - source: azure-well-architected
+      framework: well-architected
+      service: well-architected
+      category: governance
+      doc_type: whitepaper
+      urls:
+        - https://learn.microsoft.com/en-us/azure/well-architected/
+        - https://learn.microsoft.com/en-us/azure/well-architected/cost-optimization/
+        - https://learn.microsoft.com/en-us/azure/well-architected/security/
+        - https://learn.microsoft.com/en-us/azure/well-architected/reliability/
+        - https://learn.microsoft.com/en-us/azure/well-architected/operational-excellence/
+        - https://learn.microsoft.com/en-us/azure/well-architected/performance-efficiency/
+        - https://learn.microsoft.com/en-us/azure/well-architected/sustainability/
+
+full:
+  aws:
+    - source: aws-docs
+      service: ec2
+      category: compute
+      doc_type: reference
+      urls:
+        - https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/concepts.html
+        - https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/instance-types.html
+        - https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/ec2-best-practices.html
+    - source: aws-docs
+      service: lambda
+      category: compute
+      doc_type: reference
+      urls:
+        - https://docs.aws.amazon.com/lambda/latest/dg/welcome.html
+        - https://docs.aws.amazon.com/lambda/latest/dg/lambda-invocation.html
+        - https://docs.aws.amazon.com/lambda/latest/dg/best-practices.html
+        - https://docs.aws.amazon.com/lambda/latest/dg/lambda-concurrency.html
+    - source: aws-docs
+      service: ecs
+      category: compute
+      doc_type: reference
+      urls:
+        - https://docs.aws.amazon.com/AmazonECS/latest/developerguide/Welcome.html
+        - https://docs.aws.amazon.com/AmazonECS/latest/developerguide/AWS_Fargate.html
+        - https://docs.aws.amazon.com/AmazonECS/latest/developerguide/ecs-best-practices.html
+    - source: aws-docs
+      service: eks
+      category: compute
+      doc_type: reference
+      urls:
+        - https://docs.aws.amazon.com/eks/latest/userguide/what-is-eks.html
+        - https://docs.aws.amazon.com/eks/latest/userguide/eks-architecture.html
+        - https://docs.aws.amazon.com/eks/latest/userguide/managed-node-groups.html
+        - https://docs.aws.amazon.com/eks/latest/best-practices/introduction.html
+    - source: aws-docs
+      service: autoscaling
+      category: compute
+      doc_type: reference
+      urls:
+        - https://docs.aws.amazon.com/autoscaling/ec2/userguide/what-is-amazon-ec2-auto-scaling.html
+        - https://docs.aws.amazon.com/autoscaling/ec2/userguide/ec2-auto-scaling-termination-policies.html
+    - source: aws-docs
+      service: batch
+      category: compute
+      doc_type: reference
+      urls:
+        - https://docs.aws.amazon.com/batch/latest/userguide/what-is-batch.html
+        - https://docs.aws.amazon.com/batch/latest/userguide/best-practices.html
+    - source: aws-docs
+      service: s3
+      category: storage
+      doc_type: reference
+      urls:
+        - https://docs.aws.amazon.com/AmazonS3/latest/userguide/Welcome.html
+        - https://docs.aws.amazon.com/AmazonS3/latest/userguide/storage-class-intro.html
+        - https://docs.aws.amazon.com/AmazonS3/latest/userguide/object-lifecycle-mgmt.html
+        - https://docs.aws.amazon.com/AmazonS3/latest/userguide/optimizing-performance.html
+    - source: aws-docs
+      service: ebs
+      category: storage
+      doc_type: reference
+      urls:
+        - https://docs.aws.amazon.com/ebs/latest/userguide/what-is-ebs.html
+        - https://docs.aws.amazon.com/ebs/latest/userguide/ebs-volume-types.html
+    - source: aws-docs
+      service: efs
+      category: storage
+      doc_type: reference
+      urls:
+        - https://docs.aws.amazon.com/efs/latest/ug/whatisefs.html
+        - https://docs.aws.amazon.com/efs/latest/ug/performance.html
+    - source: aws-docs
+      service: fsx
+      category: storage
+      doc_type: reference
+      urls:
+        - https://docs.aws.amazon.com/fsx/latest/WindowsGuide/what-is.html
+    - source: aws-docs
+      service: rds
+      category: database
+      doc_type: reference
+      urls:
+        - https://docs.aws.amazon.com/AmazonRDS/latest/UserGuide/Welcome.html
+        - https://docs.aws.amazon.com/AmazonRDS/latest/UserGuide/Concepts.MultiAZ.html
+        - https://docs.aws.amazon.com/AmazonRDS/latest/UserGuide/CHAP_BestPractices.html
+    - source: aws-docs
+      service: aurora
+      category: database
+      doc_type: reference
+      urls:
+        - https://docs.aws.amazon.com/AmazonRDS/latest/AuroraUserGuide/CHAP_AuroraOverview.html
+        - https://docs.aws.amazon.com/AmazonRDS/latest/AuroraUserGuide/Aurora.Replication.html
+        - https://docs.aws.amazon.com/AmazonRDS/latest/AuroraUserGuide/
+    - source: aws-docs
+      service: dynamodb
+      category: database
+      doc_type: reference
+      urls:
+        - https://docs.aws.amazon.com/amazondynamodb/latest/developerguide/Introduction.html
+        - https://docs.aws.amazon.com/amazondynamodb/latest/developerguide/HowItWorks.CoreComponents.html
+        - https://docs.aws.amazon.com/amazondynamodb/latest/developerguide/best-practices.html
+    - source: aws-docs
+      service: elasticache
+      category: database
+      doc_type: reference
+      urls:
+        - https://docs.aws.amazon.com/AmazonElastiCache/latest/dg/WhatIs.html
+        - https://docs.aws.amazon.com/AmazonElastiCache/latest/dg/BestPractices.html
+    - source: aws-docs
+      service: redshift
+      category: database
+      doc_type: reference
+      urls:
+        - https://docs.aws.amazon.com/redshift/latest/mgmt/welcome.html
+        - https://docs.aws.amazon.com/redshift/latest/dg/
+    - source: aws-docs
+      service: documentdb
+      category: database
+      doc_type: reference
+      urls:
+        - https://docs.aws.amazon.com/documentdb/latest/devguide/what-is.html
+    - source: aws-docs
+      service: vpc
+      category: networking
+      doc_type: reference
+      urls:
+        - https://docs.aws.amazon.com/vpc/latest/userguide/what-is-amazon-vpc.html
+        - https://docs.aws.amazon.com/vpc/latest/userguide/configure-subnets.html
+        - https://docs.aws.amazon.com/vpc/latest/userguide/vpc-security-groups.html
+    - source: aws-docs
+      service: elb
+      category: networking
+      doc_type: reference
+      urls:
+        - https://docs.aws.amazon.com/elasticloadbalancing/latest/application/introduction.html
+        - https://docs.aws.amazon.com/elasticloadbalancing/latest/network/introduction.html
+    - source: aws-docs
+      service: cloudfront
+      category: networking
+      doc_type: reference
+      urls:
+        - https://docs.aws.amazon.com/AmazonCloudFront/latest/DeveloperGuide/Introduction.html
+        - https://docs.aws.amazon.com/AmazonCloudFront/latest/DeveloperGuide/ConfiguringCaching.html
+    - source: aws-docs
+      service: route53
+      category: networking
+      doc_type: reference
+      urls:
+        - https://docs.aws.amazon.com/Route53/latest/DeveloperGuide/Welcome.html
+        - https://docs.aws.amazon.com/Route53/latest/DeveloperGuide/routing-policy.html
+    - source: aws-docs
+      service: transit-gateway
+      category: networking
+      doc_type: reference
+      urls:
+        - https://docs.aws.amazon.com/vpc/latest/tgw/what-is-transit-gateway.html
+    - source: aws-docs
+      service: iam
+      category: security
+      doc_type: reference
+      urls:
+        - https://docs.aws.amazon.com/IAM/latest/UserGuide/introduction.html
+        - https://docs.aws.amazon.com/IAM/latest/UserGuide/best-practices.html
+        - https://docs.aws.amazon.com/IAM/latest/UserGuide/access_policies.html
+    - source: aws-docs
+      service: kms
+      category: security
+      doc_type: reference
+      urls:
+        - https://docs.aws.amazon.com/kms/latest/developerguide/overview.html
+        - https://docs.aws.amazon.com/kms/latest/developerguide/concepts.html
+    - source: aws-docs
+      service: secretsmanager
+      category: security
+      doc_type: reference
+      urls:
+        - https://docs.aws.amazon.com/secretsmanager/latest/userguide/intro.html
+        - https://docs.aws.amazon.com/secretsmanager/latest/userguide/best-practices.html
+    - source: aws-docs
+      service: guardduty
+      category: security
+      doc_type: reference
+      urls:
+        - https://docs.aws.amazon.com/guardduty/latest/ug/what-is-guardduty.html
+        - https://docs.aws.amazon.com/guardduty/latest/ug/guardduty_findings.html
+    - source: aws-docs
+      service: waf
+      category: security
+      doc_type: reference
+      urls:
+        - https://docs.aws.amazon.com/waf/latest/developerguide/what-is-aws-waf.html
+        - https://docs.aws.amazon.com/waf/latest/developerguide/
+    - source: aws-docs
+      service: config
+      category: governance
+      doc_type: reference
+      urls:
+        - https://docs.aws.amazon.com/config/latest/developerguide/WhatIsConfig.html
+    - source: aws-docs
+      service: organizations
+      category: governance
+      doc_type: reference
+      urls:
+        - https://docs.aws.amazon.com/organizations/latest/userguide/orgs_introduction.html
+        - https://docs.aws.amazon.com/organizations/latest/userguide/orgs_best-practices.html
+    - source: aws-docs
+      service: cloudwatch
+      category: observability
+      doc_type: reference
+      urls:
+        - https://docs.aws.amazon.com/AmazonCloudWatch/latest/monitoring/WhatIsCloudWatch.html
+        - https://docs.aws.amazon.com/AmazonCloudWatch/latest/monitoring/cloudwatch_concepts.html
+    - source: aws-docs
+      service: xray
+      category: observability
+      doc_type: reference
+      urls:
+        - https://docs.aws.amazon.com/xray/latest/devguide/aws-xray.html
+    - source: aws-docs
+      service: cloudtrail
+      category: observability
+      doc_type: reference
+      urls:
+        - https://docs.aws.amazon.com/awscloudtrail/latest/userguide/cloudtrail-user-guide.html
+    - source: aws-docs
+      service: cloudformation
+      category: devops
+      doc_type: reference
+      urls:
+        - https://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/Welcome.html
+        - https://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/best-practices.html
+    - source: aws-docs
+      service: cdk
+      category: devops
+      doc_type: reference
+      urls:
+        - https://docs.aws.amazon.com/cdk/v2/guide/home.html
+        - https://docs.aws.amazon.com/cdk/v2/guide/best-practices.html
+    - source: aws-docs
+      service: eventbridge
+      category: integration
+      doc_type: reference
+      urls:
+        - https://docs.aws.amazon.com/eventbridge/latest/userguide/eb-what-is.html
+    - source: aws-docs
+      service: sqs
+      category: integration
+      doc_type: reference
+      urls:
+        - https://docs.aws.amazon.com/AWSSimpleQueueService/latest/SQSDeveloperGuide/welcome.html
+        - https://docs.aws.amazon.com/AWSSimpleQueueService/latest/SQSDeveloperGuide/sqs-best-practices.html
+    - source: aws-docs
+      service: sns
+      category: integration
+      doc_type: reference
+      urls:
+        - https://docs.aws.amazon.com/sns/latest/dg/welcome.html
+    - source: aws-docs
+      service: api-gateway
+      category: integration
+      doc_type: reference
+      urls:
+        - https://docs.aws.amazon.com/apigateway/latest/developerguide/welcome.html
+        - https://docs.aws.amazon.com/apigateway/latest/developerguide/api-gateway-basic-concept.html
+    - source: aws-docs
+      service: step-functions
+      category: integration
+      doc_type: reference
+      urls:
+        - https://docs.aws.amazon.com/step-functions/latest/dg/welcome.html
+        - https://docs.aws.amazon.com/step-functions/latest/dg/welcome.html
+    - source: aws-docs
+      service: kinesis
+      category: integration
+      doc_type: reference
+      urls:
+        - https://docs.aws.amazon.com/streams/latest/dev/introduction.html
+    - source: aws-docs
+      service: msk
+      category: integration
+      doc_type: reference
+      urls:
+        - https://docs.aws.amazon.com/msk/latest/developerguide/what-is-msk.html
+    - source: aws-docs
+      service: glue
+      category: analytics
+      doc_type: reference
+      urls:
+        - https://docs.aws.amazon.com/glue/latest/dg/what-is-glue.html
+    - source: aws-docs
+      service: athena
+      category: analytics
+      doc_type: reference
+      urls:
+        - https://docs.aws.amazon.com/athena/latest/ug/what-is.html
+        - https://docs.aws.amazon.com/athena/latest/ug/performance-tuning.html
+    - source: aws-docs
+      service: bedrock
+      category: ai-ml
+      doc_type: reference
+      urls:
+        - https://docs.aws.amazon.com/bedrock/latest/userguide/what-is-bedrock.html
+        - https://docs.aws.amazon.com/bedrock/latest/userguide/model-access.html
+    - source: aws-docs
+      service: sagemaker
+      category: ai-ml
+      doc_type: reference
+      urls:
+        - https://docs.aws.amazon.com/sagemaker/latest/dg/whatis.html
+  gcp:
+    - source: gcp-docs
+      service: compute-engine
+      category: compute
+      doc_type: reference
+      urls:
+        - https://docs.cloud.google.com/compute/docs
+        - https://docs.cloud.google.com/compute/docs/instances
+        - https://docs.cloud.google.com/compute/docs/machine-resource
+    - source: gcp-docs
+      service: cloud-run
+      category: compute
+      doc_type: reference
+      urls:
+        - https://docs.cloud.google.com/run/docs
+        - https://docs.cloud.google.com/run/docs/tips/general
+    - source: gcp-docs
+      service: cloud-functions
+      category: compute
+      doc_type: reference
+      urls:
+        - https://docs.cloud.google.com/functions/docs
+        - https://docs.cloud.google.com/run/docs/tips/functions-best-practices
+    - source: gcp-docs
+      service: gke
+      category: compute
+      doc_type: reference
+      urls:
+        - https://docs.cloud.google.com/kubernetes-engine/docs/concepts/kubernetes-engine-overview
+        - https://docs.cloud.google.com/kubernetes-engine/docs/how-to/hardening-your-cluster
+        - https://docs.cloud.google.com/kubernetes-engine/docs/concepts/node-pools
+    - source: gcp-docs
+      service: gke-autopilot
+      category: compute
+      doc_type: reference
+      urls:
+        - https://docs.cloud.google.com/kubernetes-engine/docs/concepts/autopilot-overview
+    - source: gcp-docs
+      service: dataflow
+      category: compute
+      doc_type: reference
+      urls:
+        - https://docs.cloud.google.com/dataflow/docs
+        - https://docs.cloud.google.com/dataflow/docs/overview
+    - source: gcp-docs
+      service: app-engine
+      category: compute
+      doc_type: reference
+      urls:
+        - https://docs.cloud.google.com/appengine/docs
+    - source: gcp-docs
+      service: cloud-storage
+      category: storage
+      doc_type: reference
+      urls:
+        - https://docs.cloud.google.com/storage/docs
+        - https://docs.cloud.google.com/storage/docs/storage-classes
+        - https://docs.cloud.google.com/storage/docs/lifecycle
+        - https://docs.cloud.google.com/storage/docs/best-practices
+    - source: gcp-docs
+      service: persistent-disk
+      category: storage
+      doc_type: reference
+      urls:
+        - https://docs.cloud.google.com/compute/docs/disks
+        - https://docs.cloud.google.com/compute/docs/disks/performance
+    - source: gcp-docs
+      service: filestore
+      category: storage
+      doc_type: reference
+      urls:
+        - https://docs.cloud.google.com/filestore/docs
+    - source: gcp-docs
+      service: cloud-sql
+      category: database
+      doc_type: reference
+      urls:
+        - https://docs.cloud.google.com/sql/docs
+        - https://docs.cloud.google.com/sql/docs/postgres
+        - https://docs.cloud.google.com/sql/docs/mysql
+    - source: gcp-docs
+      service: alloydb
+      category: database
+      doc_type: reference
+      urls:
+        - https://docs.cloud.google.com/alloydb/docs
+        - https://docs.cloud.google.com/alloydb/docs/overview
+    - source: gcp-docs
+      service: spanner
+      category: database
+      doc_type: reference
+      urls:
+        - https://docs.cloud.google.com/spanner/docs
+        - https://docs.cloud.google.com/spanner/docs/instances
+    - source: gcp-docs
+      service: firestore
+      category: database
+      doc_type: reference
+      urls:
+        - https://docs.cloud.google.com/firestore/native/docs
+        - https://docs.cloud.google.com/firestore/native/docs/data-model
+        - https://docs.cloud.google.com/firestore/native/docs/best-practices
+    - source: gcp-docs
+      service: bigtable
+      category: database
+      doc_type: reference
+      urls:
+        - https://docs.cloud.google.com/bigtable/docs
+    - source: gcp-docs
+      service: memorystore
+      category: database
+      doc_type: reference
+      urls:
+        - https://docs.cloud.google.com/memorystore/docs
+        - https://docs.cloud.google.com/memorystore/docs/redis
+    - source: gcp-docs
+      service: bigquery
+      category: analytics
+      doc_type: reference
+      urls:
+        - https://docs.cloud.google.com/bigquery/docs/introduction
+        - https://docs.cloud.google.com/bigquery/docs/best-practices-performance-overview
+        - https://docs.cloud.google.com/bigquery/docs/storage_overview
+    - source: gcp-docs
+      service: vpc
+      category: networking
+      doc_type: reference
+      urls:
+        - https://docs.cloud.google.com/vpc/docs
+        - https://docs.cloud.google.com/vpc/docs/vpc
+        - https://docs.cloud.google.com/firewall/docs/firewalls
+    - source: gcp-docs
+      service: cloud-load-balancing
+      category: networking
+      doc_type: reference
+      urls:
+        - https://docs.cloud.google.com/load-balancing/docs
+        - https://docs.cloud.google.com/load-balancing/docs/https
+    - source: gcp-docs
+      service: cloud-cdn
+      category: networking
+      doc_type: reference
+      urls:
+        - https://docs.cloud.google.com/cdn/docs
+        - https://docs.cloud.google.com/cdn/docs/best-practices
+    - source: gcp-docs
+      service: cloud-dns
+      category: networking
+      doc_type: reference
+      urls:
+        - https://docs.cloud.google.com/dns/docs
+        - https://docs.cloud.google.com/dns/docs/overview
+    - source: gcp-docs
+      service: cloud-nat
+      category: networking
+      doc_type: reference
+      urls:
+        - https://docs.cloud.google.com/nat/docs/overview
+    - source: gcp-docs
+      service: iam
+      category: security
+      doc_type: reference
+      urls:
+        - https://docs.cloud.google.com/iam/docs
+        - https://docs.cloud.google.com/iam/docs/roles-permissions
+    - source: gcp-docs
+      service: cloud-kms
+      category: security
+      doc_type: reference
+      urls:
+        - https://docs.cloud.google.com/kms/docs
+    - source: gcp-docs
+      service: secret-manager
+      category: security
+      doc_type: reference
+      urls:
+        - https://docs.cloud.google.com/secret-manager/docs
+        - https://docs.cloud.google.com/secret-manager/docs/best-practices
+    - source: gcp-docs
+      service: security-command-center
+      category: security
+      doc_type: reference
+      urls:
+        - https://docs.cloud.google.com/security-command-center/docs
+        - https://docs.cloud.google.com/security-command-center/docs/security-command-center-overview
+    - source: gcp-docs
+      service: cloud-armor
+      category: security
+      doc_type: reference
+      urls:
+        - https://docs.cloud.google.com/armor/docs
+    - source: gcp-docs
+      service: cloud-logging
+      category: observability
+      doc_type: reference
+      urls:
+        - https://docs.cloud.google.com/logging/docs
+    - source: gcp-docs
+      service: cloud-monitoring
+      category: observability
+      doc_type: reference
+      urls:
+        - https://docs.cloud.google.com/monitoring/docs
+        - https://docs.cloud.google.com/monitoring/alerts
+    - source: gcp-docs
+      service: cloud-trace
+      category: observability
+      doc_type: reference
+      urls:
+        - https://docs.cloud.google.com/trace/docs
+    - source: gcp-docs
+      service: cloud-build
+      category: devops
+      doc_type: reference
+      urls:
+        - https://docs.cloud.google.com/build/docs
+    - source: gcp-docs
+      service: cloud-deploy
+      category: devops
+      doc_type: reference
+      urls:
+        - https://docs.cloud.google.com/deploy/docs
+    - source: gcp-docs
+      service: artifact-registry
+      category: devops
+      doc_type: reference
+      urls:
+        - https://docs.cloud.google.com/artifact-registry/docs
+    - source: gcp-docs
+      service: cloud-composer
+      category: devops
+      doc_type: reference
+      urls:
+        - https://docs.cloud.google.com/composer/docs
+    - source: gcp-docs
+      service: pubsub
+      category: integration
+      doc_type: reference
+      urls:
+        - https://docs.cloud.google.com/pubsub/docs/overview
+        - https://docs.cloud.google.com/pubsub/docs/publisher
+        - https://docs.cloud.google.com/pubsub/docs/subscriber
+    - source: gcp-docs
+      service: cloud-tasks
+      category: integration
+      doc_type: reference
+      urls:
+        - https://docs.cloud.google.com/tasks/docs
+    - source: gcp-docs
+      service: cloud-scheduler
+      category: integration
+      doc_type: reference
+      urls:
+        - https://docs.cloud.google.com/scheduler/docs
+    - source: gcp-docs
+      service: vertex-ai
+      category: ai-ml
+      doc_type: reference
+      urls:
+        - https://docs.cloud.google.com/gemini-enterprise-agent-platform
+        - https://docs.cloud.google.com/gemini-enterprise-agent-platform/machine-learning
+    - source: gcp-docs
+      service: gemini
+      category: ai-ml
+      doc_type: reference
+      urls:
+        - https://docs.cloud.google.com/gemini-enterprise-agent-platform/models/gemini/2-5-flash
+  azure:
+    - source: azure-docs
+      service: virtual-machines
+      category: compute
+      doc_type: reference
+      urls:
+        - https://learn.microsoft.com/en-us/azure/virtual-machines/overview
+        - https://learn.microsoft.com/en-us/azure/virtual-machines/sizes/overview
+    - source: azure-docs
+      service: app-service
+      category: compute
+      doc_type: reference
+      urls:
+        - https://learn.microsoft.com/en-us/azure/app-service/overview
+        - https://learn.microsoft.com/en-us/azure/app-service/overview-hosting-plans
+    - source: azure-docs
+      service: container-apps
+      category: compute
+      doc_type: reference
+      urls:
+        - https://learn.microsoft.com/en-us/azure/container-apps/overview
+    - source: azure-docs
+      service: functions
+      category: compute
+      doc_type: reference
+      urls:
+        - https://learn.microsoft.com/en-us/azure/azure-functions/functions-overview
+        - https://learn.microsoft.com/en-us/azure/azure-functions/functions-best-practices
+    - source: azure-docs
+      service: aks
+      category: compute
+      doc_type: reference
+      urls:
+        - https://learn.microsoft.com/en-us/azure/aks/what-is-aks
+        - https://learn.microsoft.com/en-us/azure/aks/concepts-clusters-workloads
+        - https://learn.microsoft.com/en-us/azure/aks/best-practices
+    - source: azure-docs
+      service: aks-hybrid
+      category: compute
+      doc_type: reference
+      urls:
+        - https://learn.microsoft.com/en-us/azure/aks/hybrid/aks-hybrid-options-overview
+    - source: azure-docs
+      service: vm-scale-sets
+      category: compute
+      doc_type: reference
+      urls:
+        - https://learn.microsoft.com/en-us/azure/virtual-machine-scale-sets/overview
+    - source: azure-docs
+      service: blob-storage
+      category: storage
+      doc_type: reference
+      urls:
+        - https://learn.microsoft.com/en-us/azure/storage/blobs/storage-blobs-overview
+        - https://learn.microsoft.com/en-us/azure/storage/blobs/access-tiers-overview
+        - https://learn.microsoft.com/en-us/azure/storage/blobs/lifecycle-management-overview
+    - source: azure-docs
+      service: disk-storage
+      category: storage
+      doc_type: reference
+      urls:
+        - https://learn.microsoft.com/en-us/azure/virtual-machines/managed-disks-overview
+        - https://learn.microsoft.com/en-us/azure/virtual-machines/disks-types
+    - source: azure-docs
+      service: azure-files
+      category: storage
+      doc_type: reference
+      urls:
+        - https://learn.microsoft.com/en-us/azure/storage/files/storage-files-introduction
+        - https://learn.microsoft.com/en-us/azure/storage/files/storage-files-planning
+    - source: azure-docs
+      service: netapp-files
+      category: storage
+      doc_type: reference
+      urls:
+        - https://learn.microsoft.com/en-us/azure/azure-netapp-files/azure-netapp-files-introduction
+    - source: azure-docs
+      service: postgresql
+      category: database
+      doc_type: reference
+      urls:
+        - https://learn.microsoft.com/en-us/azure/postgresql/flexible-server/overview
+        - https://learn.microsoft.com/en-us/azure/postgresql/flexible-server/concepts-high-availability
+    - source: azure-docs
+      service: mysql
+      category: database
+      doc_type: reference
+      urls:
+        - https://learn.microsoft.com/en-us/azure/mysql/flexible-server/overview
+    - source: azure-docs
+      service: cosmos-db
+      category: database
+      doc_type: reference
+      urls:
+        - https://learn.microsoft.com/en-us/azure/cosmos-db/introduction
+        - https://learn.microsoft.com/en-us/azure/cosmos-db/nosql/
+        - https://learn.microsoft.com/en-us/azure/cosmos-db/partitioning-overview
+    - source: azure-docs
+      service: sql-database
+      category: database
+      doc_type: reference
+      urls:
+        - https://learn.microsoft.com/en-us/azure/azure-sql/database/sql-database-paas-overview
+        - https://learn.microsoft.com/en-us/azure/azure-sql/database/high-availability-sla
+    - source: azure-docs
+      service: cache-redis
+      category: database
+      doc_type: reference
+      urls:
+        - https://learn.microsoft.com/en-us/azure/azure-cache-for-redis/cache-overview
+        - https://learn.microsoft.com/en-us/azure/azure-cache-for-redis/cache-best-practices
+    - source: azure-docs
+      service: synapse
+      category: analytics
+      doc_type: reference
+      urls:
+        - https://learn.microsoft.com/en-us/azure/synapse-analytics/overview-what-is
+    - source: azure-docs
+      service: data-factory
+      category: analytics
+      doc_type: reference
+      urls:
+        - https://learn.microsoft.com/en-us/azure/data-factory/introduction
+    - source: azure-docs
+      service: virtual-network
+      category: networking
+      doc_type: reference
+      urls:
+        - https://learn.microsoft.com/en-us/azure/virtual-network/virtual-networks-overview
+        - https://learn.microsoft.com/en-us/azure/virtual-network/concepts-and-best-practices
+    - source: azure-docs
+      service: application-gateway
+      category: networking
+      doc_type: reference
+      urls:
+        - https://learn.microsoft.com/en-us/azure/application-gateway/overview
+    - source: azure-docs
+      service: front-door
+      category: networking
+      doc_type: reference
+      urls:
+        - https://learn.microsoft.com/en-us/azure/frontdoor/front-door-overview
+        - https://learn.microsoft.com/en-us/azure/frontdoor/best-practices
+    - source: azure-docs
+      service: azure-dns
+      category: networking
+      doc_type: reference
+      urls:
+        - https://learn.microsoft.com/en-us/azure/dns/dns-overview
+    - source: azure-docs
+      service: expressroute
+      category: networking
+      doc_type: reference
+      urls:
+        - https://learn.microsoft.com/en-us/azure/expressroute/expressroute-introduction
+    - source: azure-docs
+      service: load-balancer
+      category: networking
+      doc_type: reference
+      urls:
+        - https://learn.microsoft.com/en-us/azure/load-balancer/load-balancer-overview
+    - source: azure-docs
+      service: entra-id
+      category: security
+      doc_type: reference
+      urls:
+        - https://learn.microsoft.com/en-us/entra/fundamentals/what-is-entra
+        - https://learn.microsoft.com/en-us/entra/identity/role-based-access-control/custom-overview
+    - source: azure-docs
+      service: key-vault
+      category: security
+      doc_type: reference
+      urls:
+        - https://learn.microsoft.com/en-us/azure/key-vault/general/overview
+        - https://learn.microsoft.com/en-us/azure/key-vault/general/secure-key-vault
+    - source: azure-docs
+      service: defender
+      category: security
+      doc_type: reference
+      urls:
+        - https://learn.microsoft.com/en-us/azure/defender-for-cloud/defender-for-cloud-introduction
+        - https://learn.microsoft.com/en-us/azure/defender-for-cloud/secure-score-security-controls
+    - source: azure-docs
+      service: azure-policy
+      category: security
+      doc_type: reference
+      urls:
+        - https://learn.microsoft.com/en-us/azure/governance/policy/overview
+    - source: azure-docs
+      service: azure-firewall
+      category: security
+      doc_type: reference
+      urls:
+        - https://learn.microsoft.com/en-us/azure/firewall/overview
+    - source: azure-docs
+      service: sentinel
+      category: security
+      doc_type: reference
+      urls:
+        - https://learn.microsoft.com/en-us/azure/sentinel/overview
+    - source: azure-docs
+      service: monitor
+      category: observability
+      doc_type: reference
+      urls:
+        - https://learn.microsoft.com/en-us/azure/azure-monitor/fundamentals/overview
+        - https://learn.microsoft.com/en-us/azure/azure-monitor/best-practices
+    - source: azure-docs
+      service: application-insights
+      category: observability
+      doc_type: reference
+      urls:
+        - https://learn.microsoft.com/en-us/azure/azure-monitor/app/app-insights-overview
+    - source: azure-docs
+      service: log-analytics
+      category: observability
+      doc_type: reference
+      urls:
+        - https://learn.microsoft.com/en-us/azure/azure-monitor/logs/log-analytics-overview
+    - source: azure-docs
+      service: azure-devops
+      category: devops
+      doc_type: reference
+      urls:
+        - https://learn.microsoft.com/en-us/azure/devops/user-guide/what-is-azure-devops
+    - source: azure-docs
+      service: bicep
+      category: devops
+      doc_type: reference
+      urls:
+        - https://learn.microsoft.com/en-us/azure/azure-resource-manager/bicep/overview
+        - https://learn.microsoft.com/en-us/azure/azure-resource-manager/bicep/best-practices
+    - source: azure-docs
+      service: arm-templates
+      category: devops
+      doc_type: reference
+      urls:
+        - https://learn.microsoft.com/en-us/azure/azure-resource-manager/templates/overview
+        - https://learn.microsoft.com/en-us/azure/azure-resource-manager/templates/best-practices
+    - source: azure-docs
+      service: container-registry
+      category: devops
+      doc_type: reference
+      urls:
+        - https://learn.microsoft.com/en-us/azure/container-registry/container-registry-intro
+    - source: azure-docs
+      service: api-management
+      category: integration
+      doc_type: reference
+      urls:
+        - https://learn.microsoft.com/en-us/azure/api-management/api-management-key-concepts
+    - source: azure-docs
+      service: logic-apps
+      category: integration
+      doc_type: reference
+      urls:
+        - https://learn.microsoft.com/en-us/azure/logic-apps/logic-apps-overview
+    - source: azure-docs
+      service: service-bus
+      category: integration
+      doc_type: reference
+      urls:
+        - https://learn.microsoft.com/en-us/azure/service-bus-messaging/service-bus-messaging-overview
+    - source: azure-docs
+      service: event-hubs
+      category: integration
+      doc_type: reference
+      urls:
+        - https://learn.microsoft.com/en-us/azure/event-hubs/event-hubs-about
+    - source: azure-docs
+      service: event-grid
+      category: integration
+      doc_type: reference
+      urls:
+        - https://learn.microsoft.com/en-us/azure/event-grid/overview
+    - source: azure-docs
+      service: ai-services
+      category: ai-ml
+      doc_type: reference
+      urls:
+        - https://learn.microsoft.com/en-us/azure/ai-services/what-are-ai-services
+        - https://learn.microsoft.com/en-us/azure/ai-foundry/openai/overview

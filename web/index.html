@@ -1,0 +1,117 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>CIP — Cloud Intelligence Platform</title>
+  <link rel="stylesheet" href="style.css">
+  <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>☁️</text></svg>">
+</head>
+<body>
+  <div class="app">
+    <!-- Sidebar -->
+    <aside class="sidebar">
+      <div class="brand">
+        <span class="brand-icon">☁️</span>
+        <div class="brand-text">
+          <h1>CIP</h1>
+          <p>Cloud Intelligence Platform</p>
+        </div>
+      </div>
+
+      <div class="config-panel">
+        <h2>Configuração</h2>
+        <label class="field">
+          <span>API URL</span>
+          <input id="apiUrl" type="text" value="http://localhost:8000" />
+        </label>
+        <label class="field">
+          <span>API Key</span>
+          <input id="apiKey" type="password" placeholder="(vazio em dev)" />
+        </label>
+        <label class="field">
+          <span>Tenant ID</span>
+          <input id="tenantId" type="text" value="default" />
+        </label>
+        <label class="field">
+          <span>Cloud</span>
+          <select id="cloudSelect">
+            <option value="">— qualquer —</option>
+            <option value="aws">AWS</option>
+            <option value="gcp">GCP</option>
+            <option value="azure">Azure</option>
+          </select>
+        </label>
+        <label class="field checkbox">
+          <input id="reactMode" type="checkbox" />
+          <span>ReAct mode (raciocínio multi-step)</span>
+        </label>
+        <label class="field checkbox">
+          <input id="streamMode" type="checkbox" checked />
+          <span>Streaming (SSE)</span>
+        </label>
+      </div>
+
+      <div class="examples">
+        <h2>Exemplos</h2>
+        <button class="example" data-q="Quais são os 6 pilares do AWS Well-Architected?">Conhecimento AWS</button>
+        <button class="example" data-q="Compare AWS Lambda vs Azure Functions vs GCP Cloud Functions">Comparação multi-cloud</button>
+        <button class="example" data-q="Analise meu ambiente AWS para encontrar oportunidades de economia">Análise FinOps</button>
+        <button class="example" data-q="Revise este manifesto K8s e liste problemas">Inspection K8s</button>
+        <button class="example" data-q="Como aplicar circuit breaker em microsservicos Kubernetes?">Software Architecture</button>
+        <button class="example" data-q="Licoes aprendidas do incident do AWS S3 US-EAST-1 em 2017?">Postmortem / case study</button>
+      </div>
+
+      <div class="conv-section">
+        <div class="conv-header">
+          <h2>Conversas</h2>
+          <button id="newConvBtn" class="btn-icon" title="Nova conversa">＋</button>
+        </div>
+        <div id="convList" class="conv-list"></div>
+      </div>
+
+      <div class="status-bar">
+        <span id="statusDot" class="dot"></span>
+        <span id="statusText">Desconectado</span>
+      </div>
+    </aside>
+
+    <!-- Main chat area -->
+    <main class="main">
+      <header class="main-header">
+        <h2>Chat</h2>
+        <div class="header-actions">
+          <button id="clearBtn" class="btn-secondary">Limpar</button>
+          <button id="healthBtn" class="btn-secondary">Health</button>
+        </div>
+      </header>
+
+      <div id="messages" class="messages">
+        <div class="welcome">
+          <h2>👋 Bem-vindo ao CIP</h2>
+          <p>LLM especialista em <strong>AWS</strong>, <strong>GCP</strong> e <strong>Azure</strong>.</p>
+          <p>Faça uma pergunta técnica ou revise código IaC. As respostas vêm com citações de fontes oficiais.</p>
+          <p class="hint">💡 Comece com um dos exemplos na barra lateral, ou digite sua própria pergunta abaixo.</p>
+        </div>
+      </div>
+
+      <form id="chatForm" class="chat-form">
+        <textarea
+          id="questionInput"
+          placeholder="Pergunte algo sobre AWS, GCP ou Azure..."
+          rows="2"
+        ></textarea>
+        <div class="form-actions">
+          <span id="charCount" class="char-count">0</span>
+          <button type="submit" id="sendBtn" class="btn-primary">
+            <span>Enviar</span>
+            <span class="kbd">Enter</span>
+          </button>
+        </div>
+      </form>
+    </main>
+  </div>
+
+  <script src="app.js"></script>
+</body>
+</html>

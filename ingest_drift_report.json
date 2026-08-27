@@ -1,0 +1,13 @@
+{
+  "timestamp": "2026-08-24T17:51:15.440259+00:00",
+  "scope": "mvp",
+  "drift_detected": false,
+  "changes": [],
+  "stats": {},
+  "summary": {
+    "monitored_urls": 20,
+    "baseline_urls": 20,
+    "by_cloud": {},
+    "by_service_top10": {}
+  }
+}
