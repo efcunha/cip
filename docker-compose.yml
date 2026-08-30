@@ -27,13 +27,9 @@ version: "3.9"
 # ─────────────────────────────────────────────────────────────────────────
 
 x-api-common: &api-common
-  build:
-    context: .
-    dockerfile: Dockerfile
-    # target `homolog` = runtime + eval/ + tests/ + dev deps (pytest), para
-    # rodar preflight/eval/testes dentro do container. Em deploy real, use o
-    # target `base` (imagem enxuta, sem artefatos de teste).
-    target: homolog
+  image: cip-cip-api:local
+  # compose-local.ps1 builds this image explicitly; startup never rebuilds.
+  build: .
   restart: unless-stopped
   # Reutiliza o Postgres externo `cloudpilot_postgres` (pgvector:pg16). O
   # cip-api entra na MESMA rede podman do postgres (ver `networks:` abaixo) e
