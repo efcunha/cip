@@ -128,6 +128,9 @@ frontend/workflow_*.json
 
 *.bak
 opencode.bak
+# Backups de .env com sufixo de timestamp (contêm secrets; nunca versionar).
+.env.bak*
+*.env.bak*
 backend/measure.py
 # Added by code-review-graph
 .code-review-graph/

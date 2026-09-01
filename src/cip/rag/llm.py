@@ -134,6 +134,30 @@ def _stub_response(prompt: str) -> str:
     )
 
 
+class _ExtractiveLLM(CustomLLM):
+    """LLM-guard para o modo extrativo (``LLM_PROVIDER=extractive``).
+
+    Não gera texto: existe apenas para que ``configure_llama_settings`` tenha um
+    ``LlamaSettings.llm`` válido sem configurar nenhum cliente de geração.
+    Qualquer chamada de geração levanta erro — garantindo ZERO chamada externa
+    de LLM mesmo se algum caminho tentar usar o query_engine de síntese.
+    """
+
+    @property
+    def metadata(self) -> "LLMMetadata":
+        return LLMMetadata(model_name="extractive", is_chat_model=False, num_output=0)
+
+    def complete(self, prompt: str, **kwargs: Any) -> "CompletionResponse":
+        raise RuntimeError("extractive mode: LLM generation disabled (no external model).")
+
+    async def acomplete(self, prompt: str, **kwargs: Any) -> "CompletionResponse":
+        raise RuntimeError("extractive mode: LLM generation disabled (no external model).")
+
+    def stream_complete(self, prompt: str, **kwargs: Any):
+        raise RuntimeError("extractive mode: LLM generation disabled (no external model).")
+        yield  # pragma: no cover
+
+
 def _is_testing() -> bool:
     """True quando ``IS_TESTING`` está setado (truthy).
 
@@ -202,6 +226,12 @@ def build_llm() -> Any:
     if provider == "stub":
         log.warning("stub_llm_active", reason="sem credenciais Bedrock/OpenAI na Fase 1A")
         return _StubLLM()
+
+    if provider == "extractive":
+        # Modo local determinístico: nenhum cliente de geração é configurado.
+        # O RagEngine sintetiza por extração (rag/extractive.py) sem LLM.
+        log.info("extractive_llm_guard_active", note="síntese extrativa local, sem LLM externo")
+        return _ExtractiveLLM()
 
     if provider == "minimax":
         # MiniMax M3 (MiniMax) — API OpenAI-compatible.

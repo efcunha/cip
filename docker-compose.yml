@@ -45,10 +45,13 @@ x-api-common: &api-common
     DB_POOL_SIZE: "20"
     DB_MAX_OVERFLOW: "20"
 
-    # ─── LLM (defaults MiniMax M3) ───
-    LLM_PROVIDER: ${LLM_PROVIDER:-minimax}
-    LLM_MODEL: ${LLM_MODEL:-MiniMax-M3}
-    LLM_BASE_URL: ${LLM_BASE_URL:-https://api.minimax.io/v1}
+    # ─── LLM (modo local extrativo — sem LLM externo) ───
+    # LLM_PROVIDER=extractive ativa síntese determinística por extração de
+    # trechos recuperados (embedding local). NENHUM cliente de geração é
+    # configurado; não há chamada a Bedrock/OpenAI/MiniMax/DeepSeek.
+    LLM_PROVIDER: ${LLM_PROVIDER:-extractive}
+    LLM_MODEL: ${LLM_MODEL:-extractive}
+    LLM_BASE_URL: ${LLM_BASE_URL:-}
     LLM_CONTEXT_SIZE: ${LLM_CONTEXT_SIZE:-1000000}
     LLM_MAX_TOKENS: ${LLM_MAX_TOKENS:-131072}
     LLM_TEMPERATURE: ${LLM_TEMPERATURE:-0.1}
@@ -61,11 +64,20 @@ x-api-common: &api-common
     EMBED_DIM: ${EMBED_DIM:-1024}
     EMBED_DEVICE: cpu
 
+    # ─── Retrieval (casado com bge-large-en-v1.5, cosine) ───
+    # Calibração real (Round 25): grounded ~0.57-0.81, off-topic ~0.49.
+    RETRIEVAL_TOP_K: ${RETRIEVAL_TOP_K:-8}
+    RETRIEVAL_MIN_SCORE: ${RETRIEVAL_MIN_SCORE:-0.50}
+
     # ─── App ───
     CIP_ENV: ${CIP_ENV:-production}
     CIP_READONLY: "true"
     LOG_LEVEL: ${LOG_LEVEL:-INFO}
     PORT: "8000"
+    # Auth estrita (CIP_ENV != dev): mapa de API keys por tenant.
+    # Formato: "key1:tenant1:rpm,key2:tenant2:rpm". Sempre via secret (.env),
+    # nunca hardcoded aqui.
+    CIP_API_KEYS: ${CIP_API_KEYS:-}
 
     # ─── Concorrência ───
     MAX_CONCURRENT_REQUESTS: "200"

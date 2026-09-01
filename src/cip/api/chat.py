@@ -34,6 +34,7 @@ Isolamento:
 from __future__ import annotations
 
 import asyncio
+import json
 import time
 import uuid
 from datetime import datetime, timezone
@@ -221,12 +222,12 @@ def _history_to_context(messages: list[Any], max_chars: int = 4000) -> str:
 @router.post("/conversations", response_model=ConversationOut, status_code=201)
 async def create_conversation(
     req: CreateConversationReq,
+    request: Request,
     ctx: TenantContext = Depends(get_tenant),
 ) -> Any:
     """Cria uma conversa vazia (título opcional — auto-gerado depois)."""
     from sqlalchemy import text
 
-    request = ctx  # alias para código que usa request.app.state
     tenant_id = ctx.tenant_id
     conv_id = str(uuid.uuid4())
     now = datetime.now(timezone.utc)
@@ -242,7 +243,7 @@ async def create_conversation(
             "tenant": tenant_id,
             "title": req.title,
             "now": now,
-            "metadata": req.metadata,
+            "metadata": json.dumps(req.metadata),
         },
     )
     await db.commit()
@@ -260,6 +261,7 @@ async def create_conversation(
 
 @router.get("/conversations", response_model=ConversationListOut)
 async def list_conversations(
+    request: Request,
     limit: int = 50,
     offset: int = 0,
     ctx: TenantContext = Depends(get_tenant),
@@ -267,7 +269,6 @@ async def list_conversations(
     """Lista conversas do tenant ordenadas por updated_at DESC."""
     from sqlalchemy import text
 
-    request = ctx
     tenant_id = ctx.tenant_id
     limit = min(limit, 200)
     db = request.app.state.db
@@ -296,11 +297,10 @@ async def list_conversations(
 
 
 @router.get("/conversations/{conv_id}", response_model=ConversationOut)
-async def get_conversation(conv_id: str, ctx: TenantContext = Depends(get_tenant)) -> Any:
+async def get_conversation(conv_id: str, request: Request, ctx: TenantContext = Depends(get_tenant)) -> Any:
     """Detalhe + histórico completo de mensagens."""
     from sqlalchemy import text
 
-    request = ctx
     tenant_id = ctx.tenant_id
     db = request.app.state.db
 
@@ -322,11 +322,10 @@ async def get_conversation(conv_id: str, ctx: TenantContext = Depends(get_tenant
 
 
 @router.delete("/conversations/{conv_id}", status_code=204)
-async def delete_conversation(conv_id: str, ctx: TenantContext = Depends(get_tenant)) -> None:
+async def delete_conversation(conv_id: str, request: Request, ctx: TenantContext = Depends(get_tenant)) -> None:
     """Remove conversa + cascade delete em messages."""
     from sqlalchemy import text
 
-    request = ctx
     tenant_id = ctx.tenant_id
     db = request.app.state.db
     await _ensure_conversation_belongs_to_tenant(db, conv_id, tenant_id)
@@ -347,6 +346,7 @@ async def delete_conversation(conv_id: str, ctx: TenantContext = Depends(get_ten
 async def ask_in_conversation(
     conv_id: str,
     req: AskInConversationReq,
+    request: Request,
     ctx: TenantContext = Depends(get_tenant),
 ) -> Any:
     """Adiciona pergunta + retorna resposta do orchestrator (com histórico).
@@ -367,16 +367,13 @@ async def ask_in_conversation(
     """
     from sqlalchemy import text
 
-    request = ctx
     tenant_id = ctx.tenant_id
 
     # ── Se streaming, delega para a versão SSE ──────────────────────
     if req.stream:
-        return await _ask_in_conversation_stream(conv_id, req, ctx)
+        return await _ask_in_conversation_stream(conv_id, req, request, ctx)
 
     # ── (código non-streaming continua) ─────────────────────────────
-    db = request.app.state.db
-    conv_row = await _ensure_conversation_belongs_to_tenant(db, conv_id, tenant_id)
     db = request.app.state.db
     conv_row = await _ensure_conversation_belongs_to_tenant(db, conv_id, tenant_id)
 
@@ -402,7 +399,7 @@ async def ask_in_conversation(
         ),
         {
             "id": user_msg_id, "cid": conv_id, "tenant": tenant_id,
-            "content": req.question, "now": now, "metadata": req.metadata,
+            "content": req.question, "now": now, "metadata": json.dumps(req.metadata),
         },
     )
     await db.commit()
@@ -524,10 +521,6 @@ async def ask_in_conversation(
     ))
 
 
-# Importação tardia para evitar circular
-import json  # noqa: E402
-
-
 class _FakeMsg:
     """Dataclass-like simples para _message_to_dict (evita ORM session em memória)."""
     __slots__ = ("id", "conversation_id", "role", "content", "sources", "findings",
@@ -543,6 +536,7 @@ class _FakeMsg:
 async def submit_feedback(
     msg_id: str,
     req: FeedbackReq,
+    request: Request,
     ctx: TenantContext = Depends(get_tenant),
 ) -> dict[str, Any]:
     """Registra 👍/👎 em uma mensagem específica.
@@ -554,7 +548,6 @@ async def submit_feedback(
     """
     from sqlalchemy import text
 
-    request = ctx
     tenant_id = ctx.tenant_id
     db = request.app.state.db
 
@@ -612,6 +605,7 @@ async def submit_feedback(
 async def _ask_in_conversation_stream(
     conv_id: str,
     req: AskInConversationReq,
+    request: Request,
     ctx: TenantContext,
 ) -> StreamingResponse:
     """Versão SSE do ask_in_conversation.
@@ -633,7 +627,6 @@ async def _ask_in_conversation_stream(
     """
     from sqlalchemy import text
 
-    request = ctx
     tenant_id = ctx.tenant_id
     db = request.app.state.db
     orchestrator = request.app.state.orchestrator
@@ -663,7 +656,7 @@ async def _ask_in_conversation_stream(
         ),
         {
             "id": user_msg_id, "cid": conv_id, "tenant": tenant_id,
-            "content": req.question, "now": now, "metadata": req.metadata,
+            "content": req.question, "now": now, "metadata": json.dumps(req.metadata),
         },
     )
     await db.commit()
@@ -790,6 +783,7 @@ async def _ask_in_conversation_stream(
 @router.get("/conversations/{conv_id}/export")
 async def export_conversation(
     conv_id: str,
+    request: Request,
     format: str = "md",  # md | json
     ctx: TenantContext = Depends(get_tenant),
 ) -> Any:
@@ -803,7 +797,7 @@ async def export_conversation(
     from sqlalchemy import text
 
     tenant_id = ctx.tenant_id
-    db = ctx.app.state.db
+    db = request.app.state.db
     conv_row = await _ensure_conversation_belongs_to_tenant(db, conv_id, tenant_id)
 
     msg_rows = (
@@ -893,6 +887,7 @@ class ShareConversationReq(BaseModel):
 async def create_share_link(
     conv_id: str,
     req: ShareConversationReq,
+    request: Request,
     ctx: TenantContext = Depends(get_tenant),
 ) -> dict[str, Any]:
     """Gera link público read-only para a conversa.
@@ -905,7 +900,7 @@ async def create_share_link(
     from sqlalchemy import text
 
     tenant_id = ctx.tenant_id
-    db = ctx.app.state.db
+    db = request.app.state.db
     conv_row = await _ensure_conversation_belongs_to_tenant(db, conv_id, tenant_id)
 
     token = str(uuid.uuid4())
@@ -921,7 +916,7 @@ async def create_share_link(
         ),
         {
             "token": token, "cid": conv_id, "tenant": tenant_id,
-            "now": now, "exp": expires_at, "metadata": req.metadata,
+            "now": now, "exp": expires_at, "metadata": json.dumps(req.metadata),
         },
     )
     await db.commit()
@@ -940,7 +935,7 @@ public_router = APIRouter(prefix="/chat", tags=["chat-public"])
 
 
 @public_router.get("/share/{token}")
-async def get_shared_conversation(token: str) -> Any:
+async def get_shared_conversation(token: str, request: Request) -> Any:
     """Acessa conversa compartilhada via token (read-only, sem auth).
 
     Incrementa access_count. Retorna 410 Gone se revogado ou expirado.
@@ -948,14 +943,8 @@ async def get_shared_conversation(token: str) -> Any:
     from fastapi import HTTPException as HTTPEx
     from sqlalchemy import text
 
-    # Sem Depends(get_tenant) — endpoint público
-    db = None
-    import sys
-    if "request" in dir() and hasattr(request, "app"):
-        db = request.app.state.db  # type: ignore[name-defined]
-    else:
-        # Acessa app state via dependency
-        raise HTTPEx(status_code=500, detail="db not available in this context")
+    # Sem Depends(get_tenant) — endpoint público. O DB vem do Request injetado.
+    db = request.app.state.db
 
     row = (
         await db.execute(

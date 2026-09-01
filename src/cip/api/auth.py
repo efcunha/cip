@@ -190,8 +190,21 @@ def authenticate(request: Request) -> TenantContext:
         raise HTTPException(status_code=403, detail="Invalid API key")
 
     key_data = valid_keys[api_key]
-    # Tenant_id do header deve bater com o registrado na chave (se fornecido)
-    if tenant_id_header and tenant_id_header != key_data["tenant_id"]:
+    # X-Tenant-Id é OBRIGATÓRIO em produção (contrato declarado). Em dev,
+    # derivamos da chave quando ausente (comportamento tolerante documentado).
+    if not tenant_id_header:
+        if _is_dev_mode():
+            log.warning(
+                "auth_missing_tenant_id_dev",
+                key_tenant=key_data["tenant_id"],
+            )
+            tenant_id_header = key_data["tenant_id"]
+        else:
+            log.warning("auth_missing_tenant_id")
+            raise HTTPException(status_code=401, detail="X-Tenant-Id header required")
+
+    # Tenant_id do header deve bater com o registrado na chave.
+    if tenant_id_header != key_data["tenant_id"]:
         log.warning(
             "auth_tenant_mismatch",
             header_tenant=tenant_id_header,

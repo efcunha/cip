@@ -30,7 +30,7 @@ class Settings(BaseSettings):
     db_password: str = "cip"
 
     # LLM
-    llm_provider: Literal["bedrock", "openai", "local", "stub", "minimax", "deepseek"] = "bedrock"
+    llm_provider: Literal["bedrock", "openai", "local", "stub", "minimax", "deepseek", "extractive"] = "bedrock"
     llm_model: str = "anthropic.claude-sonnet-4-5-20250929-v1:0"
     # Contexto depende do provider. Bedrock Sonnet 4.5 = 200k. MiniMax M3 = 1M (verified).
     llm_context_size: int = 200_000
@@ -61,15 +61,15 @@ class Settings(BaseSettings):
     db_pool_timeout_s: float = 30.0
     db_pool_recycle_s: int = 1800
 
-    # Embeddings (perfil minimalista por padrão: modelo pequeno + multilíngue,
-    # roda em CPU/servidor barato com ~0.5GB RAM).
+    # Embeddings (perfil integrado por padrão: bge-large-en-v1.5, 1024 dims,
+    # casado com o docker-compose.yml e com a calibração Round 25).
     #   provider local   -> HuggingFace local (custo zero, sem dependência externa)
     #   provider bedrock -> Amazon Titan Embeddings (sem ML local; embed_dim=1024)
     #   provider openai  -> text-embedding-3-small (sem ML local; embed_dim=1536)
     # ATENÇÃO: embed_dim deve casar com o modelo escolhido; trocar exige re-ingestão.
     embed_provider: Literal["local", "bedrock", "openai"] = "local"
-    embed_model: str = "intfloat/multilingual-e5-small"
-    embed_dim: int = 384
+    embed_model: str = "BAAI/bge-large-en-v1.5"
+    embed_dim: int = 1024
     embed_device: str = "cpu"
     # Prefixos de instrução (E5/BGE recomendam). Vazio = sem prefixo.
     embed_query_instruction: str = "query: "
@@ -94,11 +94,14 @@ class Settings(BaseSettings):
         return self
 
     # Retrieval
-    # ATENÇÃO: min_score depende do MODELO de embeddings. Para o e5-small (padrão)
-    # os scores ficam altos/comprimidos (~0.75-0.85); use ~0.80. Para bge-large
-    # era ~0.35. Revalide com eval/run_eval.py ao trocar o modelo.
+    # ATENÇÃO: min_score depende do MODELO de embeddings.
+    #   - bge-large-en-v1.5 (default integrado, 1024 dims): calibração real
+    #     (Round 25, cosine) mostrou grounded ~0.57-0.81 e off-topic ~0.49;
+    #     use RETRIEVAL_MIN_SCORE=0.50 (o antigo 0.35 admitia off-topic).
+    #   - e5-small (384 dims): scores comprimidos (~0.75-0.85) → 0.80.
+    # Revalide com eval/run_eval.py ao trocar o modelo.
     retrieval_top_k: int = 8
-    retrieval_min_score: float = 0.80
+    retrieval_min_score: float = 0.50
 
     # AWS
     aws_region: str = "us-east-1"

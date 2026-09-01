@@ -135,7 +135,10 @@ class TestCloudPilotHttpClient:
         if not f.exists():
             pytest.skip("CipHttpClient não existe em D:\\cloudpilot-deploy")
         code = f.read_text(encoding="utf-8")
-        assert "class CipRagResult" in code
+        # CipRagResult é IMPORTADO de cip_client.py (não definido em
+        # cip_http_client.py). O contrato é o shape (answer/sources/
+        # has_grounding/refusal_reason), não a localização da classe.
+        assert "CipRagResult" in code
         assert "answer" in code
         assert "sources" in code
         assert "has_grounding" in code
@@ -159,3 +162,30 @@ class TestCloudPilotHttpClient:
         code = f.read_text(encoding="utf-8")
         assert "CIP_API_URL" in code
         assert "CIP_API_TOKEN" in code
+
+
+class TestThresholdSingleSource:
+    """Retrieval contract: cliente e endpoint NÃO podem divergir de threshold.
+
+    O endpoint /consult delega top_k/min_score ao config do servidor (None) em
+    vez de hardcodar 0.80, e o config default é o valor calibrado para o modelo
+    integrado (bge-large-en-v1.5 → 0.50). Um teste falha se algum desses dois
+    voltar a divergir.
+    """
+
+    def test_consult_req_defaults_top_k_min_score_to_none(self) -> None:
+        from cip.api.consult import ConsultReq
+
+        req = ConsultReq(question="q")
+        assert req.top_k is None
+        assert req.min_score is None
+        assert req.include_global is True
+
+    def test_settings_default_min_score_is_050(self, monkeypatch) -> None:
+        for key in ("RETRIEVAL_MIN_SCORE", "RETRIEVAL_TOP_K"):
+            monkeypatch.delenv(key, raising=False)
+        from cip.config import Settings
+
+        s = Settings(_env_file=None)
+        assert s.retrieval_min_score == 0.50
+        assert s.retrieval_top_k == 8

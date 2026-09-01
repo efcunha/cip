@@ -65,6 +65,14 @@ class Orchestrator:
         if react_mode is None:
             react_mode = os.getenv("CIP_REACT_MODE", "false").lower() in ("true", "1", "yes")
 
+        if react_mode and self._settings.llm_provider == "extractive":
+            # ReAct exige um LLM de geração; no modo extrativo não há modelo
+            # externo. Falha explícita (nunca redireciona para um LLM remoto).
+            raise RuntimeError(
+                "ReAct mode requires an external LLM; disabled in "
+                "extractive mode (LLM_PROVIDER=extractive). Use static mode."
+            )
+
         if react_mode:
             return await self._handle_react(question, cloud, iac_payload)
         return await self._handle_static(question, cloud, iac_payload)

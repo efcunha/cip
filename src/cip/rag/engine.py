@@ -96,18 +96,61 @@ class RagEngine:
             return None
         return MetadataFilters(filters=active)
 
+    def _apply_tenant_scope(
+        self,
+        nodes: list[Any],
+        tenant_id: str | None,
+        include_global: bool,
+    ) -> list[Any]:
+        """Filtra nós por escopo de tenant (isolamento de corpus).
+
+        Regras:
+        - Nó com ``workspace_id`` é documento de tenant: só aparece para o
+          tenant dono (``workspace_id == tenant_id``). Tenant A nunca vê
+          documento do tenant B.
+        - Nó sem ``workspace_id`` é global: só aparece quando
+          ``include_global=True``.
+        - ``include_global=False`` com tenant sem documentos próprios →
+          lista vazia (→ refusal, fail-closed).
+
+        O corpus atual é 100% global (nenhum nó tem ``workspace_id``), então
+        ``include_global=False`` resulta em refusal para qualquer tenant.
+        """
+        scoped: list[Any] = []
+        for n in nodes:
+            meta = getattr(n, "metadata", {}) or {}
+            ws = meta.get("workspace_id")
+            if ws is not None:
+                if tenant_id is not None and str(ws) == str(tenant_id):
+                    scoped.append(n)
+                # tenant diverge → excluído (isolamento)
+            elif include_global:
+                scoped.append(n)
+        return scoped
+
     async def query(
         self,
         question: str,
         cloud: CloudName | None = None,
         service: str | None = None,
         category: str | None = None,
+        tenant_id: str | None = None,
+        include_global: bool = True,
+        top_k: int | None = None,
+        min_score: float | None = None,
     ) -> RagResult:
-        # Cache check (Round 15)
+        effective_top_k = (
+            self._settings.retrieval_top_k if top_k is None else top_k
+        )
+        effective_min_score = (
+            self._settings.retrieval_min_score if min_score is None else min_score
+        )
+
+        # Cache check (Round 15) — tenant_id/include_global entram na chave.
         cache_key = None
         if self._cache_enabled and self._cache is not None:
             cache_key = QueryResultCache.make_key(
-                question, cloud, service, category
+                question, cloud, service, category, tenant_id, include_global
             )
             cached = self._cache.get(cache_key)
             if cached is not None:
@@ -123,22 +166,33 @@ class RagEngine:
                 )
 
         # Cache miss → executa pipeline normal
+        if self._settings.llm_provider == "extractive":
+            return await self._query_extractive(
+                question, cloud, service, category,
+                tenant_id=tenant_id,
+                include_global=include_global,
+                top_k=effective_top_k,
+                min_score=effective_min_score,
+                cache_key=cache_key,
+            )
+
         filters = self._build_filters(cloud, service, category)
 
         query_engine = self._index.as_query_engine(
-            similarity_top_k=self._settings.retrieval_top_k,
+            similarity_top_k=effective_top_k,
             filters=filters,
             system_prompt=SENIOR_ENGINEER_SYSTEM_PROMPT,
         )
 
         response = await query_engine.aquery(question)
 
-        # Filtra nós abaixo do score mínimo (anti-alucinação).
+        # Filtra nós abaixo do score mínimo (anti-alucinação) + tenant scope.
         nodes = [
             n
             for n in getattr(response, "source_nodes", [])
-            if (n.score or 0) >= self._settings.retrieval_min_score
+            if (n.score or 0) >= effective_min_score
         ]
+        nodes = self._apply_tenant_scope(nodes, tenant_id, include_global)
 
         if not nodes:
             log.warning("no_grounding", question=question[:120])
@@ -184,12 +238,91 @@ class RagEngine:
 
         return result
 
+    async def _query_extractive(
+        self,
+        question: str,
+        cloud: CloudName | None,
+        service: str | None,
+        category: str | None,
+        cache_key: str | None,
+        tenant_id: str | None = None,
+        include_global: bool = True,
+        top_k: int | None = None,
+        min_score: float | None = None,
+    ) -> RagResult:
+        """Pipeline extrativo local: retrieval puro + síntese determinística (sem LLM).
+
+        Recupera nós por similaridade (embedding local), filtra pelo score
+        mínimo e sintetiza uma resposta que cita os trechos recuperados como
+        dados — nunca como instrução operacional. Sem grounding → refusal.
+        """
+        from cip.rag.extractive import synthesize_extractive
+
+        effective_top_k = self._settings.retrieval_top_k if top_k is None else top_k
+        effective_min_score = (
+            self._settings.retrieval_min_score if min_score is None else min_score
+        )
+
+        filters = self._build_filters(cloud, service, category)
+        retriever = self._index.as_retriever(
+            similarity_top_k=effective_top_k, filters=filters
+        )
+        nodes = await retriever.aretrieve(question)
+        nodes = [
+            n for n in nodes if (n.score or 0) >= effective_min_score
+        ]
+        nodes = self._apply_tenant_scope(nodes, tenant_id, include_global)
+
+        if not nodes:
+            log.warning("no_grounding", question=question[:120])
+            result = RagResult(
+                answer=(
+                    "Não encontrei referência confiável na base de conhecimento oficial "
+                    "para responder com segurança. Refine a pergunta ou verifique se a "
+                    "documentação do serviço já foi ingerida."
+                ),
+                sources=[],
+                has_grounding=False,
+                refusal_reason="no_grounding_above_min_score",
+            )
+        else:
+            sources = [
+                Source(
+                    cloud=n.metadata.get("cloud"),
+                    service=n.metadata.get("service"),
+                    title=n.metadata.get("title"),
+                    url=n.metadata.get("url"),
+                    score=n.score,
+                    doc_id=n.metadata.get("doc_id"),
+                    source_version=n.metadata.get("version") or n.metadata.get("source_version"),
+                    timestamp=n.metadata.get("created_at") or n.metadata.get("timestamp"),
+                    content_preview=(getattr(n, "text", "") or "")[:500] or None,
+                    workspace_id=n.metadata.get("workspace_id"),
+                    is_global=n.metadata.get("is_global", True),
+                    source=n.metadata.get("source"),
+                    canonical_url=n.metadata.get("canonical_url") or n.metadata.get("url"),
+                    quarantined=False,
+                    marked=False,
+                )
+                for n in nodes
+            ]
+            answer = synthesize_extractive(question, nodes)
+            result = RagResult(answer=answer, sources=sources, has_grounding=True)
+
+        if self._cache_enabled and self._cache is not None and cache_key is not None:
+            self._cache.set(cache_key, asdict(result))
+            log.debug("query_cache_set", key=cache_key[:8])
+
+        return result
+
     def retrieve_context(
         self,
         question: str,
         cloud: CloudName | None = None,
         service: str | None = None,
         top_k: int | None = None,
+        tenant_id: str | None = None,
+        include_global: bool = True,
     ) -> list[Source]:
         """Retrieval puro (sem geração) — usado pelos especialistas/orquestrador."""
         filters = self._build_filters(cloud, service, None)
@@ -197,6 +330,10 @@ class RagEngine:
             similarity_top_k=top_k or self._settings.retrieval_top_k, filters=filters
         )
         nodes = retriever.retrieve(question)
+        nodes = [
+            n for n in nodes if (n.score or 0) >= self._settings.retrieval_min_score
+        ]
+        nodes = self._apply_tenant_scope(nodes, tenant_id, include_global)
         return [
             Source(
                 cloud=n.metadata.get("cloud"),
@@ -206,7 +343,6 @@ class RagEngine:
                 score=n.score,
             )
             for n in nodes
-            if (n.score or 0) >= self._settings.retrieval_min_score
         ]
 
 

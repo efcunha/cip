@@ -98,8 +98,12 @@ class ConsultReq(BaseModel):
     cloud: str | None = Field(default=None, description="aws|gcp|azure")
     service: str | None = Field(default=None, description="ec2, s3, lambda, etc.")
     category: str | None = Field(default=None, description="compute, storage, etc.")
-    top_k: int = Field(default=8, ge=1, le=20)
-    min_score: float = Field(default=0.80, ge=0.0, le=1.0)
+    # ``top_k`` / ``min_score`` default ``None``: quando omitidos, o
+    # ``RagEngine.query`` resolve a partir de ``settings.retrieval_top_k`` /
+    # ``settings.retrieval_min_score`` — a ÚNICA fonte de verdade do servidor.
+    # Isso evita que o endpoint use um threshold hardcoded divergente do config.
+    top_k: int | None = Field(default=None, ge=1, le=20)
+    min_score: float | None = Field(default=None, ge=0.0, le=1.0)
     run_id: str | None = Field(default=None, description="UUID para auditoria")
     prompt_hash: str | None = Field(default=None, description="SHA-256 hex (16 chars)")
     include_global: bool = Field(default=True, description="Se true, busca também no corpus global")
@@ -165,6 +169,10 @@ async def consult(
             cloud=req.cloud,
             service=req.service,
             category=req.category,
+            tenant_id=ctx.tenant_id,
+            include_global=req.include_global,
+            top_k=req.top_k,
+            min_score=req.min_score,
         )
     except Exception as exc:  # noqa: BLE001
         log.exception("consult_engine_error", question=req.question[:80])

@@ -65,6 +65,40 @@ log = get_logger(__name__)
 _UNTHROTTLED_PATHS = {"/health", "/health/live", "/metrics", "/docs", "/redoc", "/openapi.json"}
 
 
+def _run_startup_migrations(settings) -> None:
+    """Aplica migrations pendentes ANTES de criar o pool de conexões.
+
+    Fail-closed: qualquer falha aqui impede o app de subir, então o health
+    check NÃO reporta saudável com schema desatualizado. Usa o mecanismo
+    oficial ``scripts/apply_migrations.py`` (idempotente, tabela de controle
+    ``schema_migrations``), sem imprimir a URL do banco.
+    """
+    import os
+    import subprocess
+    import sys as _sys
+    from pathlib import Path
+
+    script = Path(__file__).resolve().parents[3] / "scripts" / "apply_migrations.py"
+    if not script.exists():
+        # Imagem enxuta sem o script (improvável no estágio base) → fail-closed.
+        raise RuntimeError(f"apply_migrations.py não encontrado: {script}")
+
+    env = dict(os.environ)
+    env["DATABASE_URL"] = settings.database_url
+    log.info("startup_migrations_begin", script=str(script))
+    result = subprocess.run(
+        [_sys.executable, str(script)],
+        cwd=str(script.parents[1]),
+        env=env,
+        capture_output=False,
+    )
+    if result.returncode != 0:
+        raise RuntimeError(
+            f"startup migrations failed (exit {result.returncode}) — serviço não iniciado"
+        )
+    log.info("startup_migrations_ok")
+
+
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     configure_logging()
@@ -75,6 +109,9 @@ async def lifespan(app: FastAPI):
 
     # Semáforo criado dentro do event loop (limite de concorrência por processo).
     app.state.semaphore = asyncio.Semaphore(settings.max_concurrent_requests)
+
+    # ── Round 25+: migrations pendentes ANTES do pool (fail-closed) ──
+    _run_startup_migrations(settings)
 
     # ── Round 22+: pool de conexões asyncpg + orchestrator pré-inicializados ──
     # Chat multi-turn (api/chat.py) e /ask usam ambos via request.app.state.

@@ -44,7 +44,15 @@ def db_url() -> str:
     )
 
 
-def _connect() -> "psycopg.Connection":
+def _sanitize_conn_error(exc: Exception) -> str:
+    """Não vaza URL de conexão (pode conter senha) em logs/erros."""
+    msg = str(exc)
+    if "password=" in msg:
+        msg = msg.split("password=", 1)[0].rstrip()
+    return msg or type(exc).__name__
+
+
+def _connect(url: str | None = None) -> "psycopg.Connection":
     if psycopg is None:  # pragma: no cover
         raise RuntimeError(
             "psycopg não está instalado. Rode `pip install psycopg[binary]`."
@@ -52,7 +60,12 @@ def _connect() -> "psycopg.Connection":
     # autocommit=False: cada migration roda numa transação explícita,
     # então falha = rollback (schema íntegro). A tabela de controle é
     # commitada junto com a migration aplicada.
-    return psycopg.connect(db_url(), autocommit=False)
+    try:
+        return psycopg.connect(url or db_url(), autocommit=False)
+    except Exception as exc:  # noqa: BLE001
+        raise RuntimeError(
+            f"falha ao conectar no banco: {_sanitize_conn_error(exc)}"
+        ) from exc
 
 
 def ensure_tracking_table(conn: "psycopg.Connection") -> None:
@@ -124,15 +137,14 @@ def apply_one(conn: "psycopg.Connection", path: Path, dry_run: bool = False) -> 
     return "applied"
 
 
-def main() -> int:
-    parser = argparse.ArgumentParser(description="Aplica migrations SQL em ordem")
-    parser.add_argument(
-        "--dry-run",
-        action="store_true",
-        help="Lista migrations sem aplicar",
-    )
-    args = parser.parse_args()
+def run_migrations(database_url: str | None = None, dry_run: bool = False) -> int:
+    """Aplica todas as migrations pendentes (idempotente).
 
+    Retorna 0 em sucesso; levanta ``RuntimeError`` em falha de migration.
+    Reusado pelo startup do ``cip-api`` (lifespan) para garantir que o schema
+    está no nível correto ANTES de servir tráfego — fail-closed: se a migration
+    falhar, o serviço não sobe falso-healthy.
+    """
     files = list_migrations()
     if not files:
         print("[INFO] Nenhuma migration encontrada em db/migrations/")
@@ -142,12 +154,12 @@ def main() -> int:
     for f in files:
         print(f"  - {f.name}")
 
-    if args.dry_run:
+    if dry_run:
         print("\n[OK] Modo dry-run — nenhuma migration aplicada.")
         return 0
 
     print("\nConectando ao banco...")
-    conn = _connect()
+    conn = _connect(database_url)
     print("\nCriando/validando tabela de controle...")
     ensure_tracking_table(conn)
     print("\nAplicando migrations:")
@@ -157,6 +169,17 @@ def main() -> int:
 
     print("\n[OK] Migrations processadas.")
     return 0
+
+
+def main() -> int:
+    parser = argparse.ArgumentParser(description="Aplica migrations SQL em ordem")
+    parser.add_argument(
+        "--dry-run",
+        action="store_true",
+        help="Lista migrations sem aplicar",
+    )
+    args = parser.parse_args()
+    return run_migrations(dry_run=args.dry_run)
 
 
 if __name__ == "__main__":

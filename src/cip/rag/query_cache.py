@@ -75,14 +75,22 @@ class QueryResultCache:
         cloud: str | None = None,
         service: str | None = None,
         category: str | None = None,
+        tenant_id: str | None = None,
+        include_global: bool = True,
     ) -> str:
-        """Gera chave determinística baseada nos parâmetros da query."""
+        """Gera chave determinística baseada nos parâmetros da query.
+
+        ``tenant_id`` e ``include_global`` fazem parte da chave para que dois
+        tenants NUNCA compartilhem a mesma entrada de cache (isolamento).
+        """
         payload = json.dumps(
             {
                 "q": question.strip().lower(),
                 "c": cloud or "",
                 "s": service or "",
                 "cat": category or "",
+                "t": tenant_id or "",
+                "g": bool(include_global),
             },
             sort_keys=True,
             ensure_ascii=False,

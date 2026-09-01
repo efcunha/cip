@@ -156,7 +156,7 @@ class TestAuthenticateProdMode:
         assert exc_info.value.status_code == 403
 
     def test_valid_api_key_returns_context(self, mock_env_prod: None) -> None:
-        ctx = authenticate(_make_request(api_key="key-abc"))
+        ctx = authenticate(_make_request(api_key="key-abc", tenant_id="tenant-abc"))
         assert ctx.tenant_id == "tenant-abc"
         assert ctx.rate_limit_rpm == 60
 
@@ -170,13 +170,14 @@ class TestAuthenticateProdMode:
         assert exc_info.value.status_code == 403
 
     def test_higher_rate_limit_for_second_tenant(self, mock_env_prod: None) -> None:
-        ctx = authenticate(_make_request(api_key="key-def"))
+        ctx = authenticate(_make_request(api_key="key-def", tenant_id="tenant-def"))
         assert ctx.rate_limit_rpm == 120
 
-    def test_invalid_tenant_falls_back_to_key_tenant(self, mock_env_prod: None) -> None:
-        # Sem header X-Tenant-Id → usa tenant da chave
-        ctx = authenticate(_make_request(api_key="key-abc"))
-        assert ctx.tenant_id == "tenant-abc"
+    def test_missing_tenant_id_raises_401(self, mock_env_prod: None) -> None:
+        # Sem header X-Tenant-Id em produção → 401 (contrato estrito).
+        with pytest.raises(HTTPException) as exc_info:
+            authenticate(_make_request(api_key="key-abc"))
+        assert exc_info.value.status_code == 401
 
 
 class TestAuthNoKeysConfigured:
