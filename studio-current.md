@@ -1,0 +1,16 @@
+- generic [ref=f21e4]:
+  - combobox "Select language" [ref=f21e6] [cursor=pointer]:
+    - generic:
+      - generic:
+        - generic: 🇧🇷
+        - generic: Português
+  - generic [ref=f21e10]:
+    - heading "CloudPilot" [level=1] [ref=f21e13]
+    - paragraph [ref=f21e14]: Faça login para continuar
+  - generic [ref=f21e15]:
+    - textbox "Email" [ref=f21e16]: kiro-homolog@cloudpilot-teste.com
+    - textbox "Senha" [ref=f21e17]: KiroHomolog2026!
+    - button "Entrar" [ref=f21e18]
+  - paragraph [ref=f21e19]:
+    - text: Não tem conta?
+    - button "Criar conta" [ref=f21e20]
