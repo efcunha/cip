@@ -25,7 +25,7 @@
                               │
                               ▼ HTTP
 ┌──────────────────────────────────────────────────────────────────┐
-│  CIP (this project, D:\cip)                                      │
+│  CIP (this project, C:\Projetos\cip)                                      │
 │                                                                  │
 │  - FastAPI API running (ex: localhost:8000 or container)         │
 │  - POST /consult → RAG engine → data_cloud_docs (237 chunks)    │
@@ -37,7 +37,7 @@
 
 ### 1. Start CIP
 ```bash
-cd D:\cip
+cd C:\Projetos\cip
 docker compose up -d
 # API available at http://localhost:8000
 ```
@@ -55,14 +55,14 @@ curl -X POST http://localhost:8000/auth/dev-token \
 
 ### 3. Configure cloudpilot
 ```bash
-# D:\cloudpilot-deploy\.env (or .env.local)
+# C:\Projetos\cloudpilot-deploy\.env (or .env.local)
 CIP_API_URL=http://host.docker.internal:8000
 CIP_API_TOKEN=eyJhbGciOiJIUzI1NiIs...
 ```
 
 ### 4. Restart cloudpilot
 ```bash
-cd D:\cloudpilot-deploy
+cd C:\Projetos\cloudpilot-deploy
 # Restart the backend
 ```
 
@@ -197,7 +197,7 @@ for src in result.sources:
 
 ### 1. Start CIP
 ```bash
-cd D:\cip
+cd C:\Projetos\cip
 docker compose up -d
 ```
 
@@ -241,13 +241,13 @@ Expected response:
 
 ### 3. Configure cloudpilot and test
 ```bash
-# D:\cloudpilot-deploy\.env
+# C:\Projetos\cloudpilot-deploy\.env
 CIP_API_URL=http://host.docker.internal:8000  # if cloudpilot runs in a container
 # or http://localhost:8000 if it runs on the same machine
 CIP_API_TOKEN=<token generated above>
 
 # Restart cloudpilot
-cd D:\cloudpilot-deploy
+cd C:\Projetos\cloudpilot-deploy
 # (depends on how you run it — uvicorn, docker, etc.)
 
 # Test the chat — it will show that it now calls CIP via HTTP

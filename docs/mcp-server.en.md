@@ -49,7 +49,7 @@ Use the `mcp-config.json` file at the project root:
       "args": ["-m", "cip.mcp_server"],
       "env": {
         "CIP_API_BASE_URL": "http://localhost:8000",
-        "PYTHONPATH": "D:\\cip\\src"
+        "PYTHONPATH": "C:\\Projetos\\cip\\src"
       }
     }
   }

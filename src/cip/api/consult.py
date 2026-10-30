@@ -2,7 +2,7 @@
 
 Round 22+ Phase 3: CIP exposto como backend consumido por outros chats.
 
-O cloudpilot (em D:\\cloudpilot-deploy) tem um chat que faz RAG consultando
+O cloudpilot (em C:\\Projetos\\cloudpilot-deploy) tem um chat que faz RAG consultando
 a tabela local ``cip_cloud_docs`` (in-process). Esta rota oferece a MESMA
 interface mas consultando o CIP canônico rodando em outro host/container.
 

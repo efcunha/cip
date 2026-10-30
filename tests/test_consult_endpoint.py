@@ -107,33 +107,33 @@ class TestConsultEndpointContract:
 
 
 class TestCloudPilotHttpClient:
-    """Estrutura do CipHttpClient (D:\\cloudpilot-deploy)."""
+    """Estrutura do CipHttpClient (C:\\Projetos\\cloudpilot-deploy)."""
 
     def test_file_exists(self) -> None:
-        f = Path(r"D:\cloudpilot-deploy\backend\app\services\ai\cip_http_client.py")
+        f = Path(r"C:\Projetos\cloudpilot-deploy\backend\app\services\ai\cip_http_client.py")
         if not f.exists():
-            pytest.skip("CipHttpClient não existe em D:\\cloudpilot-deploy — rode fora do sandbox")
+            pytest.skip("CipHttpClient não existe em C:\\Projetos\\cloudpilot-deploy — rode fora do sandbox")
         assert f.stat().st_size > 3000
 
     def test_module_is_valid_python(self) -> None:
-        f = Path(r"D:\cloudpilot-deploy\backend\app\services\ai\cip_http_client.py")
+        f = Path(r"C:\Projetos\cloudpilot-deploy\backend\app\services\ai\cip_http_client.py")
         if not f.exists():
-            pytest.skip("CipHttpClient não existe em D:\\cloudpilot-deploy")
+            pytest.skip("CipHttpClient não existe em C:\\Projetos\\cloudpilot-deploy")
         ast.parse(f.read_text(encoding="utf-8"))
 
     def test_client_has_is_http_mode_enabled(self) -> None:
-        f = Path(r"D:\cloudpilot-deploy\backend\app\services\ai\cip_http_client.py")
+        f = Path(r"C:\Projetos\cloudpilot-deploy\backend\app\services\ai\cip_http_client.py")
         if not f.exists():
-            pytest.skip("CipHttpClient não existe em D:\\cloudpilot-deploy")
+            pytest.skip("CipHttpClient não existe em C:\\Projetos\\cloudpilot-deploy")
         code = f.read_text(encoding="utf-8")
         assert "is_http_mode_enabled" in code
         assert "CIP_API_URL" in code
         assert "CIP_API_TOKEN" in code
 
     def test_client_returns_cipragresult(self) -> None:
-        f = Path(r"D:\cloudpilot-deploy\backend\app\services\ai\cip_http_client.py")
+        f = Path(r"C:\Projetos\cloudpilot-deploy\backend\app\services\ai\cip_http_client.py")
         if not f.exists():
-            pytest.skip("CipHttpClient não existe em D:\\cloudpilot-deploy")
+            pytest.skip("CipHttpClient não existe em C:\\Projetos\\cloudpilot-deploy")
         code = f.read_text(encoding="utf-8")
         # CipRagResult é IMPORTADO de cip_client.py (não definido em
         # cip_http_client.py). O contrato é o shape (answer/sources/
@@ -146,9 +146,9 @@ class TestCloudPilotHttpClient:
 
     def test_client_uses_drop_in_pattern(self) -> None:
         """consult_official_cloud_knowledge decide HTTP vs in-process automaticamente."""
-        f = Path(r"D:\cloudpilot-deploy\backend\app\services\ai\cip_http_client.py")
+        f = Path(r"C:\Projetos\cloudpilot-deploy\backend\app\services\ai\cip_http_client.py")
         if not f.exists():
-            pytest.skip("CipHttpClient não existe em D:\\cloudpilot-deploy")
+            pytest.skip("CipHttpClient não existe em C:\\Projetos\\cloudpilot-deploy")
         code = f.read_text(encoding="utf-8")
         assert "consult_official_cloud_knowledge" in code
         # Fallback para cip_client (in-process)
@@ -156,9 +156,9 @@ class TestCloudPilotHttpClient:
 
     def test_cloudpilot_settings_have_cip_api_fields(self) -> None:
         """backend/app/config.py tem CIP_API_URL e CIP_API_TOKEN."""
-        f = Path(r"D:\cloudpilot-deploy\backend\app\config.py")
+        f = Path(r"C:\Projetos\cloudpilot-deploy\backend\app\config.py")
         if not f.exists():
-            pytest.skip("config.py não existe em D:\\cloudpilot-deploy")
+            pytest.skip("config.py não existe em C:\\Projetos\\cloudpilot-deploy")
         code = f.read_text(encoding="utf-8")
         assert "CIP_API_URL" in code
         assert "CIP_API_TOKEN" in code
