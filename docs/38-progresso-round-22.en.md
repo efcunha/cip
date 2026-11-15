@@ -176,7 +176,7 @@ Round 22 — Homolog no container + rede compose (80% — homolog LLM real bloqu
 ## 🚧 BLOCKERS
 
 1. **`LLM_API_KEY`/`MINIMAX_API_KEY` missing** — the only available key is placeholder `sk-cp-ZZ…`. Without a real key, MiniMax M3 staging cannot be run.
-2. **`podman compose` CLI broken on the host** — `podman compose <sub>` fails with `get machine connection URI: could not find a matching machine` and `podman machine list`/`podman build` fail with `Acesso negado` on `C:\Users\ECUNHA\.ssh\known_hosts` / `C:\Users\ECUNHA\.config\containers\podman\machine\wsl\` and `C:\Projetos\cip\.pytest_cache`. Worked around with `podman exec`/`podman cp` directly (the containers were already UP and healthy).
+2. **`podman compose` CLI broken on the host** — `podman compose <sub>` fails with `get machine connection URI: could not find a matching machine` and `podman machine list`/`podman build` fail with `Acesso negado` on `C:\Users\ECUNHA\.ssh\known_hosts` / `C:\Users\ECUNHA\.config\containers\podman\machine\wsl\` and `D:\Projetos\cip\.pytest_cache`. Worked around with `podman exec`/`podman cp` directly (the containers were already UP and healthy).
 
 ---
 

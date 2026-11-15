@@ -59,7 +59,7 @@ The `cip:${sha}` release tag is now `--target base` (lean). The `homolog` build 
 ### Path taken: direct `podman build` (with a host permission workaround)
 
 A first attempt `podman build --target base .` **at the root** failed with `Access denied` when
-opening `C:\Projetos\cip\.pytest_cache` (a directory with a denied ACL on the host — even `Get-Acl`/listing
+opening `D:\Projetos\cip\.pytest_cache` (a directory with a denied ACL on the host — even `Get-Acl`/listing
 cannot read it; pre-existing from earlier rounds). Podman must walk the entire build
 context before applying `.dockerignore`, so the ACL blocked before the filter.
 

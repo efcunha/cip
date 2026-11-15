@@ -132,7 +132,7 @@ services:
 ```
 
 **Documented ASSUMPTION**: the network to persist is `cip_default` — the "native" CIP network
-(created by compose in `C:\Projetos\cip`, already `external: true`), where `cip-api` already is natively.
+(created by compose in `D:\Projetos\cip`, already `external: true`), where `cip-api` already is natively.
 By attaching `backend` + `celery_worker` to it, the manual `podman network connect` is no longer
 needed. The `cloudpilot-deploy_cloudpilot_net` network (where `cip-api` was manually connected in
 Round 25) stays as it is; the override declares the CIP network as an additional dependency and
@@ -173,9 +173,9 @@ ANSWER_LEN=1703, REFUSAL=None).
 | `.github/instructions/cip-llm-rag-mandatory.instructions.md` | new — steering of the mandatory rule |
 | `docs/ADR/adr-006-cip-mandatory.md` | new — ADR of the decision |
 | `docker-compose.cip.yml` | new — override declaring `cip_default` external and attaching backend/celery to it |
-| `docs/52-round-26-cip-finalization.md` | new — this document (in `C:\Projetos\cip\docs`) |
+| `docs/52-round-26-cip-finalization.md` | new — this document (in `D:\Projetos\cip\docs`) |
 
-> No CIP file (`C:\Projetos\cip`) was changed beyond the doc. No commit performed. No `.env`/token
+> No CIP file (`D:\Projetos\cip`) was changed beyond the doc. No commit performed. No `.env`/token
 > committed or pasted with real value.
 
 ---

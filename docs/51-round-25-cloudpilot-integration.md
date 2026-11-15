@@ -221,7 +221,7 @@ necessidade de recriar o container via compose.
 | Postgres (`cloudpilot_postgres`) | + roles `cloudpilot`/`cloudpilot_app`, + databases `cloudpilot`/`infisical` (aditivo) |
 | `docs/51-round-25-cloudpilot-integration.md` | novo — este documento |
 
-> Nenhum arquivo do CIP (`C:\Projetos\cip`) foi alterado além do doc. Nenhum commit realizado. Nenhum
+> Nenhum arquivo do CIP (`D:\Projetos\cip`) foi alterado além do doc. Nenhum commit realizado. Nenhum
 > `.env`/secret commitado ou colado em texto com valor real.
 
 ---

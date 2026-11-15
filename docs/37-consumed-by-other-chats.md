@@ -25,7 +25,7 @@
                               │
                               ▼ HTTP
 ┌──────────────────────────────────────────────────────────────────┐
-│  CIP (este projeto, C:\Projetos\cip)                                      │
+│  CIP (este projeto, D:\Projetos\cip)                                      │
 │                                                                  │
 │  - API FastAPI rodando (ex: localhost:8000 ou container)         │
 │  - POST /consult → RAG engine → data_cloud_docs (237 chunks)    │
@@ -37,7 +37,7 @@
 
 ### 1. Suba o CIP
 ```bash
-cd C:\Projetos\cip
+cd D:\Projetos\cip
 docker compose up -d
 # API disponível em http://localhost:8000
 ```
@@ -197,7 +197,7 @@ for src in result.sources:
 
 ### 1. Suba o CIP
 ```bash
-cd C:\Projetos\cip
+cd D:\Projetos\cip
 docker compose up -d
 ```
 

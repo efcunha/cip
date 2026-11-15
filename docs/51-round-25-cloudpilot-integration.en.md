@@ -221,7 +221,7 @@ recreate the container via compose.
 | Postgres (`cloudpilot_postgres`) | + roles `cloudpilot`/`cloudpilot_app`, + databases `cloudpilot`/`infisical` (additive) |
 | `docs/51-round-25-cloudpilot-integration.md` | new — this document |
 
-> No CIP file (`C:\Projetos\cip`) was changed beyond the doc. No commit performed. No
+> No CIP file (`D:\Projetos\cip`) was changed beyond the doc. No commit performed. No
 > `.env`/secret committed or pasted as real-value text.
 
 ---

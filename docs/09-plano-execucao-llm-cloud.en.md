@@ -418,7 +418,7 @@ Add prioritized official URLs to `ingestion/sources.yaml`:
 ### 🟢 Action 2 — Bring up Postgres+pgvector (2h)
 
 ```bash
-cd C:\Projetos\cip
+cd D:\Projetos\cip
 docker compose up -d postgres
 docker exec -it cip-postgres psql -U cip -d cip -c "CREATE EXTENSION IF NOT EXISTS vector;"
 docker exec -i cip-postgres psql -U cip -d cip < db/schema.sql
