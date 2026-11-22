@@ -81,14 +81,19 @@ class DriftReport:
 
 
 def load_sources(scope: str) -> list[dict[str, Any]]:
-    """Carrega entradas do sources.yaml para um scope."""
-    data = yaml.safe_load(SOURCES_FILE.read_text(encoding="utf-8"))
+    """Carrega as entradas do escopo, com a MESMA visao do ingestor.
+
+    Reusa 'cip.ingestion.ingest.load_sources' (que ja mergeia
+    sources_advanced.yaml e as knowledge areas): o drift precisa monitorar
+    exatamente as URLs que a ingestao processa. Com a lista local, que so
+    lia sources.yaml, o drift via 20 das 174 URLs do escopo mvp -- e a
+    mudanca nas outras 154 passava despercebida.
+    """
+    from cip.ingestion.ingest import load_sources as ingest_load_sources
+
     out: list[dict[str, Any]] = []
-    if scope == "full":
-        for cloud_entries in data.get("mvp", {}).values():
-            out.extend(cloud_entries)
-    for cloud_entries in data.get(scope, {}).values():
-        out.extend(cloud_entries)
+    for entries in ingest_load_sources(scope).values():
+        out.extend(entries)
     return out
 
 
@@ -108,12 +113,17 @@ def known_catalog_urls() -> set[str]:
         if not isinstance(data, dict):
             continue
         for scope_entries in data.values():
-            if not isinstance(scope_entries, dict):
-                continue
-            for entries in scope_entries.values():
-                for entry in entries or []:
-                    if isinstance(entry, dict):
-                        urls.update(entry.get("urls", []) or [])
+            entries_list: list[Any] = []
+            if isinstance(scope_entries, dict):
+                # escopo -> cloud -> [entradas]
+                for entries in scope_entries.values():
+                    entries_list.extend(entries or [])
+            elif isinstance(scope_entries, list):
+                # knowledge area (architecture, case-studies): [entradas]
+                entries_list.extend(scope_entries)
+            for entry in entries_list:
+                if isinstance(entry, dict):
+                    urls.update(entry.get("urls", []) or [])
     return urls
 
 
