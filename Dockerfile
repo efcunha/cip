@@ -21,12 +21,20 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
 # então `src/` precisa existir ANTES do install (não depois).
 COPY pyproject.toml README.md ./
 COPY src ./src
-COPY db ./db
-COPY scripts ./scripts
 RUN pip install --upgrade pip && pip install -e .
 
+# db/ e scripts/ NÃO são necessários para o install (o editable install só
+# precisa do pacote em src/). Copiá-los DEPOIS do install é o que impede que
+# uma mudança neles invalide a camada de dependências (6,8 GB): antes, editar
+# o cron mensal custava um rebuild de ~25 min do zero.
+COPY db ./db
+COPY scripts ./scripts
+
 # ── Usuário não-root (segurança) ───────────────────────────────────
-RUN useradd -m cip && chown -R cip:cip /app
+# chown preciso: o venv (6,8 GB) fica root-owned e só legível. Um
+# `chown -R /app` varreria o venv inteiro a cada build (minutos de I/O) e
+# invalidaria a camada a cada mudança em db/ ou scripts/.
+RUN useradd -m cip && chown cip:cip /app && chown -R cip:cip /app/src /app/db /app/scripts
 USER cip
 
 # ── Healthcheck (Docker sabe se o container está saudável) ────────
@@ -83,5 +91,7 @@ USER root
 # Sem isso, `pytest` DENTRO do container falha com FileNotFoundError.
 # O estágio `base` permanece enxuto (só src/ + db/ + scripts/).
 COPY . ./
-RUN pip install -e ".[dev]" && chown -R cip:cip /app
+# chown do repo inteiro (a suíte escreve .pytest_cache/.tmp_test), mas sem
+# varrer o venv (6,8 GB) a cada build.
+RUN pip install -e ".[dev]" && chown cip:cip /app && find /app -path /app/.venv -prune -o -exec chown cip:cip {} +
 USER cip

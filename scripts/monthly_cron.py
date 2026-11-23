@@ -38,9 +38,9 @@ SCRIPT = ROOT / "scripts" / "monthly_reingest.py"
 REPORTS_DIR = ROOT / "ingest_drift_reports"
 
 
-def _archive_previous_report() -> Path | None:
+def _archive_previous_report(path: Path | None = None) -> Path | None:
     """Move relatório anterior para arquivo datado (histórico)."""
-    src = ROOT / "ingest_drift_report.json"
+    src = path or (ROOT / "ingest_drift_report.json")
     if not src.exists():
         return None
     REPORTS_DIR.mkdir(exist_ok=True)
@@ -74,18 +74,31 @@ def main() -> int:
         "--dry-run", action="store_true",
         help="Apenas detectar drift, sem re-ingerir",
     )
+    parser.add_argument(
+        "--report-json", type=Path, default=None,
+        help=(
+            "Onde gravar o relatório de drift. Default: o relatório dentro do "
+            "container (scripts/monthly_reingest.json). Passe um path de um "
+            "volume montado para o relatório chegar direto no host."
+        ),
+    )
     args = parser.parse_args()
+
+    report_path = args.report_json or (ROOT / "ingest_drift_report.json")
+    report_arg = ["--report-json", str(report_path)]
 
     print(f"[{datetime.now(timezone.utc).isoformat()}] Cron mensal iniciando (scope={args.scope})")
 
     # Arquiva relatório anterior antes de gerar novo
-    archived = _archive_previous_report()
+    archived = _archive_previous_report(report_path)
     if archived:
         print(f"Relatório anterior arquivado em: {archived}")
 
     # 1. Drift detection
     print("\n=== Step 1: Drift detection ===")
-    rc, stdout, stderr = _run_script(["--detect-only", "--scope", args.scope])
+    rc, stdout, stderr = _run_script(
+        ["--detect-only", "--scope", args.scope, *report_arg]
+    )
     print(stdout)
     if stderr:
         print(f"[stderr] {stderr}", file=sys.stderr)
@@ -95,7 +108,6 @@ def main() -> int:
         return 2
 
     # Lê relatório JSON gerado
-    report_path = ROOT / "ingest_drift_report.json"
     if not report_path.exists():
         print("[ERROR] Relatório não foi gerado")
         return 2
@@ -114,7 +126,7 @@ def main() -> int:
 
     # 2. Re-ingestão
     print(f"\n=== Step 2: Re-ingest (drift detectado) ===")
-    rc, stdout, stderr = _run_script(["--scope", args.scope])
+    rc, stdout, stderr = _run_script(["--scope", args.scope, *report_arg])
     print(stdout)
     if stderr:
         print(f"[stderr] {stderr}", file=sys.stderr)
