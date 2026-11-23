@@ -142,19 +142,21 @@ def _load_one_document(url: str) -> Any | None:
 
     Carregar por-URL garante alinhamento url<->documento (essencial para o
     delta) e isola falhas: uma página que falha não derruba o lote inteiro.
-    """
-    from llama_index.readers.web import SimpleWebPageReader
 
-    try:
-        docs = SimpleWebPageReader(html_to_text=True).load_data([url])
-    except Exception as exc:  # noqa: BLE001 - rede/parse podem falhar de várias formas
-        log.warning("page_load_failed", url=url, error=str(exc))
+    O texto vem de 'cip.ingestion.webtext' -- a MESMA função usada pela
+    detecção de drift -- para que o 'doc_hash' gravado no banco e o hash
+    calculado no drift sejam comparáveis. O texto também vem sem a casca de
+    navegação das páginas de documentação (o leitor web genérico mantinha
+    menus, rodapés e avisos de JavaScript no corpus).
+    """
+    from llama_index.core import Document
+
+    from cip.ingestion.webtext import fetch_document_text
+
+    text = fetch_document_text(url)
+    if not text:
         return None
-    if not docs:
-        return None
-    doc = docs[0]
-    doc.metadata["url"] = url
-    return doc
+    return Document(text=text, metadata={"url": url})
 
 
 def _resolve_local_path(raw: str | dict[str, Any]) -> tuple[Path, str] | None:

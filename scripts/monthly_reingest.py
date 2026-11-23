@@ -52,6 +52,7 @@ from cip.logging import configure_logging, get_logger  # noqa: E402
 log = get_logger(__name__)
 
 SOURCES_FILE = SRC_PATH / "cip" / "ingestion" / "sources.yaml"
+SOURCES_ADVANCED_FILE = SRC_PATH / "cip" / "ingestion" / "sources_advanced.yaml"
 REPORT_FILE = Path(__file__).resolve().parent.parent / "ingest_drift_report.json"
 
 
@@ -80,38 +81,66 @@ class DriftReport:
 
 
 def load_sources(scope: str) -> list[dict[str, Any]]:
-    """Carrega entradas do sources.yaml para um scope."""
-    data = yaml.safe_load(SOURCES_FILE.read_text(encoding="utf-8"))
+    """Carrega as entradas do escopo, com a MESMA visao do ingestor.
+
+    Reusa 'cip.ingestion.ingest.load_sources' (que ja mergeia
+    sources_advanced.yaml e as knowledge areas): o drift precisa monitorar
+    exatamente as URLs que a ingestao processa. Com a lista local, que so
+    lia sources.yaml, o drift via 20 das 174 URLs do escopo mvp -- e a
+    mudanca nas outras 154 passava despercebida.
+    """
+    from cip.ingestion.ingest import load_sources as ingest_load_sources
+
     out: list[dict[str, Any]] = []
-    if scope == "full":
-        for cloud_entries in data.get("mvp", {}).values():
-            out.extend(cloud_entries)
-    for cloud_entries in data.get(scope, {}).values():
-        out.extend(cloud_entries)
+    for entries in ingest_load_sources(scope).values():
+        out.extend(entries)
     return out
+
+
+def known_catalog_urls() -> set[str]:
+    """URLs conhecidas em qualquer escopo do catálogo (mvp, full e fontes avançadas).
+
+    Usado para decidir se uma URL do banco foi REMOVIDA do catálogo. Sem isso,
+    uma URL do escopo 'full' seria reportada como removida quando o drift roda
+    no escopo 'mvp' -- e as fontes avançadas (sources_advanced.yaml) seriam
+    reportadas como removidas sempre.
+    """
+    urls: set[str] = set()
+    for path in (SOURCES_FILE, SOURCES_ADVANCED_FILE):
+        if not path.exists():
+            continue
+        data = yaml.safe_load(path.read_text(encoding="utf-8")) or {}
+        if not isinstance(data, dict):
+            continue
+        for scope_entries in data.values():
+            entries_list: list[Any] = []
+            if isinstance(scope_entries, dict):
+                # escopo -> cloud -> [entradas]
+                for entries in scope_entries.values():
+                    entries_list.extend(entries or [])
+            elif isinstance(scope_entries, list):
+                # knowledge area (architecture, case-studies): [entradas]
+                entries_list.extend(scope_entries)
+            for entry in entries_list:
+                if isinstance(entry, dict):
+                    urls.update(entry.get("urls", []) or [])
+    return urls
 
 
 def fetch_url_hash(url: str, timeout: int = 30) -> str | None:
     """Baixa URL, extrai texto (mesmo pipeline do ingest) e retorna SHA256.
 
-    Usa o mesmo SimpleWebPageReader(html_to_text=True) que o cip.ingestion.ingest
-    para garantir que o hash seja comparável ao 'doc_hash' salvo no banco durante
-    a ingestão (caso contrário, divergem por causa de tags/scripts/CSS que mudam
-    sem alterar o conteúdo textual).
+    Usa a MESMA função do ingest (cip.ingestion.webtext.fetch_document_text)
+    para garantir que o hash seja comparável ao 'doc_hash' salvo no banco
+    durante a ingestão (caso contrário, divergem por causa de tags/scripts/CSS
+    que mudam sem alterar o conteúdo textual).
     """
-    try:
-        from llama_index.readers.web import SimpleWebPageReader
+    from cip.ingestion.webtext import fetch_document_text
 
-        docs = SimpleWebPageReader(html_to_text=True).load_data([url])
-        if not docs:
-            return None
-        text = (docs[0].get_content() or "").strip()
-        if len(text) < 100:  # mesma heurística do ingest
-            return None
-        return hashlib.sha256(text.encode("utf-8")).hexdigest()
-    except Exception as exc:  # noqa: BLE001 - rede/parse podem falhar de várias formas
-        log.warning("url_fetch_failed", url=url, error=str(exc))
+    text = (fetch_document_text(url, timeout_s=timeout) or "").strip()
+    if len(text) < 100:  # mesma heurística do ingest
         return None
+    return hashlib.sha256(text.encode("utf-8")).hexdigest()
 
 
 def get_baseline_hashes() -> dict[str, str]:
@@ -206,8 +235,8 @@ def detect_drift(scope: str = "full") -> DriftReport:
         if checked % 25 == 0:
             log.info("drift_check_progress", checked=checked, drift=len(report.changes))
 
-    # URLs no banco que não estão mais em sources.yaml (removidas do catálogo)
-    monitored_set = set(monitored_urls.keys())
+    # URLs no banco que não estão mais no catálogo (removidas de verdade).
+    monitored_set = set(monitored_urls.keys()) | known_catalog_urls()
     for url in baseline:
         if url not in monitored_set:
             cloud, svc = "?", "?"
@@ -255,11 +284,16 @@ def save_report_(report: DriftReport, path: Path) -> None:
     )
 
 
-def trigger_reingestion() -> int:
-    """Roda a ingestão normal do CIP (que tem delta detection built-in)."""
-    log.info("triggering_reingestion")
+def trigger_reingestion(scope: str = "full") -> int:
+    """Roda a ingestão normal do CIP (que tem delta detection built-in).
+
+    O escopo precisa ser propagado: com 'full' hardcoded, uma execução
+    --scope mvp expandia o corpus para TODA a documentação de serviços
+    (centenas de URLs), muito além do corpus ingerido.
+    """
+    log.info("triggering_reingestion", scope=scope)
     result = subprocess.run(
-        [sys.executable, "-m", "cip.ingestion.ingest", "--scope", "full"],
+        [sys.executable, "-m", "cip.ingestion.ingest", "--scope", scope],
         cwd=str(SRC_PATH.parent),
     )
     return result.returncode
@@ -276,7 +310,7 @@ def main() -> int:
 
     configure_logging()
     report = detect_drift(args.scope)
-    save_report(report, args.report_json)
+    save_report_(report, args.report_json)
 
     print(f"\n=== DRIFT REPORT ===")
     print(f"Timestamp:   {report.timestamp}")
@@ -298,7 +332,7 @@ def main() -> int:
 
     if report.drift_detected:
         print(f"\nDrift detectado. Iniciando re-ingestão...")
-        rc = trigger_reingestion()
+        rc = trigger_reingestion(args.scope)
         return rc if rc != 0 else 1
 
     print("\nSem drift. Nada a fazer.")
