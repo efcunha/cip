@@ -119,7 +119,10 @@ def main() -> int:
     if stderr:
         print(f"[stderr] {stderr}", file=sys.stderr)
 
-    if rc != 0:
+    # monthly_reingest.py: 0 = sem drift, 1 = drift detectado (re-ingestão
+    # concluída), 2 = erro. Os DOIS primeiros são sucesso -- tratar o 1 como
+    # falha fazia toda rodada mensal terminar em "Re-ingestão falhou".
+    if rc not in (0, 1):
         print(f"[ERROR] Re-ingestão falhou (rc={rc})")
         return 2
 
