@@ -47,7 +47,13 @@ from cip.api.schemas import (
     HealthResponse,
     SourceOut,
 )
-from cip.api.streaming import stream_error, stream_rag_result
+from cip.api.streaming import (
+    EVENT_DONE,
+    format_sse_event,
+    stream_error,
+    stream_live_events,
+    stream_rag_result,
+)
 from cip.config import get_settings
 from cip.logging import configure_logging, get_logger
 from cip.observability import (
@@ -433,6 +439,30 @@ async def ask_stream(
 
     async def event_generator() -> Any:
         try:
+            if get_settings().llm_provider == "local":
+                # Streaming real (Ollama): chunks assim que o modelo os produz.
+                state: dict[str, Any] = {}
+                async for sse in stream_live_events(
+                    get_engine().query_stream(
+                        req.question,
+                        cloud=req.cloud,
+                        service=req.service,
+                        category=req.category,
+                    ),
+                    state,
+                ):
+                    yield sse
+                live = state["result"]
+                yield format_sse_event(EVENT_DONE, {
+                    "answer": live.answer,
+                    "sources": [s.__dict__ for s in live.sources],
+                    "has_grounding": live.has_grounding,
+                    "refusal_reason": live.refusal_reason,
+                    "from_cache": live.from_cache,
+                    "fallback": live.fallback,
+                    "ttft_ms": state.get("ttft_ms"),
+                })
+                return
             with instrument_handler(
                 operation="ask_stream",
                 tenant_id=ctx.tenant_id,
@@ -481,6 +511,8 @@ async def analyze_stream(
 
     async def event_generator() -> Any:
         try:
+            live_state: dict[str, Any] = {}
+            live = get_settings().llm_provider == "local"
             with instrument_handler(
                 operation="analyze_stream",
                 tenant_id=ctx.tenant_id,
@@ -488,12 +520,26 @@ async def analyze_stream(
                 cloud=req.cloud,
                 has_iac=bool(req.iac_payload),
             ):
-                result = await get_orchestrator().handle(
-                    req.question,
-                    cloud=req.cloud,
-                    iac_payload=req.iac_payload,
-                    react_mode=req.react_mode,
-                )
+                if live:
+                    # Streaming real (Ollama): deltas emitidos durante a geração.
+                    async for sse in stream_live_events(
+                        get_orchestrator().handle_stream(
+                            req.question,
+                            cloud=req.cloud,
+                            iac_payload=req.iac_payload,
+                            react_mode=req.react_mode,
+                        ),
+                        live_state,
+                    ):
+                        yield sse
+                    result = live_state["result"]
+                else:
+                    result = await get_orchestrator().handle(
+                        req.question,
+                        cloud=req.cloud,
+                        iac_payload=req.iac_payload,
+                        react_mode=req.react_mode,
+                    )
 
             # Métricas
             for f in result.findings:
@@ -502,8 +548,19 @@ async def analyze_stream(
                     labels={"severity": f.severity, "domain": f.domain, "tenant": ctx.tenant_id},
                 )
 
-            # Stream summary + done event
             sources = [s for s in result.sources]
+            if live:
+                yield format_sse_event(EVENT_DONE, {
+                    "answer": result.summary,
+                    "sources": sources,
+                    "has_grounding": True,
+                    "refusal_reason": None,
+                    "from_cache": False,
+                    "fallback": result.fallback,
+                    "ttft_ms": live_state.get("ttft_ms"),
+                })
+                return
+            # Stream summary + done event
             async for chunk in stream_rag_result(
                 answer=result.summary,
                 sources=sources,

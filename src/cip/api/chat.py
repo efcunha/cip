@@ -52,9 +52,11 @@ from cip.api.streaming import (
     EVENT_DONE,
     EVENT_ERROR,
     format_sse_event,
+    stream_live_events,
     stream_text,
 )
 from cip.api.ws import notify_feedback_changed, notify_message_added
+from cip.config import get_settings
 from cip.logging import get_logger
 from cip.observability import (
     observe_chat_latency,
@@ -618,12 +620,10 @@ async def _ask_in_conversation_stream(
       5. Persiste assistant message com texto completo (no fim)
       6. SSE done com msg_id + sources + latency
 
-    Nota sobre streaming real vs chunked:
-      - O orchestrator atual não tem modo streaming (chama acomplete()).
-      - Aqui chunkamos a resposta completa em pedaços de 50 chars/20ms,
-        simulando o que seria token-by-token com um LLM que suportasse
-        stream_generate. Trocar por orchestrator.handle_stream() quando
-        disponível.
+    Streaming:
+      - LLM_PROVIDER=local (Ollama): deltas reais via orchestrator.handle_stream().
+        Em fallback extrativo, o texto persistido e ``done.answer`` é o extrativo.
+      - Demais providers: resposta completa chunkada (50 chars/20ms).
     """
     from sqlalchemy import text
 
@@ -670,10 +670,21 @@ async def _ask_in_conversation_stream(
         # Header SSE explícito (alguns proxies precisam)
         yield ": SSE stream started\n\n"
 
-        # 4a. Roda orchestrator (aguarda resposta completa)
+        # 4a. Roda orchestrator. LLM local: deltas reais via handle_stream;
+        #     demais providers: resposta completa + chunking (stream_text).
         t0 = time.perf_counter()
+        live = get_settings().llm_provider == "local"
+        stream_state: dict = {}
         try:
-            result = await orchestrator.handle(augmented_question, cloud=req.cloud)
+            if live:
+                async for sse in stream_live_events(
+                    orchestrator.handle_stream(augmented_question, cloud=req.cloud),
+                    stream_state,
+                ):
+                    yield sse
+                result = stream_state["result"]
+            else:
+                result = await orchestrator.handle(augmented_question, cloud=req.cloud)
         except Exception as exc:  # noqa: BLE001
             log.exception("orchestrator_failed_in_stream", conv_id=conv_id)
             yield format_sse_event(EVENT_ERROR, {
@@ -698,9 +709,10 @@ async def _ask_in_conversation_stream(
         plan_obj = getattr(result, "plan", None)
         plan_dict = plan_obj.__dict__ if plan_obj and hasattr(plan_obj, "__dict__") else None
 
-        # 4b. Stream chunks da resposta (simulando token-by-token)
-        async for chunk in stream_text(answer, chunk_size=50, delay_ms=20):
-            yield format_sse_event(EVENT_CHUNK, {"delta": chunk})
+        # 4b. Providers sem streaming real: chunka a resposta pronta.
+        if not live:
+            async for chunk in stream_text(answer, chunk_size=50, delay_ms=20):
+                yield format_sse_event(EVENT_CHUNK, {"delta": chunk})
 
         # 4c. Persiste assistant message (com texto completo)
         asst_msg_id = str(uuid.uuid4())
@@ -753,6 +765,8 @@ async def _ask_in_conversation_stream(
             "tools_used": getattr(result, "tools_used", []) or [],
             "latency_ms": elapsed_ms,
             "model_name": (plan_dict or {}).get("model_name") if plan_dict else None,
+            "fallback": getattr(result, "fallback", None),
+            "ttft_ms": stream_state.get("ttft_ms"),
         })
 
         log.info(
