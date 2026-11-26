@@ -22,6 +22,7 @@ Dependências: httpx e beautifulsoup4 (já são dependências do projeto).
 
 from __future__ import annotations
 
+import re
 from typing import Any
 
 from cip.logging import get_logger
@@ -87,8 +88,64 @@ def _is_boilerplate_line(line: str) -> bool:
     return low in _BOILERPLATE_EXACT
 
 
+# Avisos de nível de página (aposentadoria, fim de suporte, descontinuação).
+# Conservador: só remove a linha quando ela fala de ciclo de vida do produto
+# E tem forma de aviso (título curto ou data/futuro). Notas e avisos
+# procedurais ("Note: run this before...") ficam intactos.
+_LIFECYCLE_RE = re.compile(
+    r"\b(retire[sd]?|retirement|end[- ]of[- ](?:support|life)|deprecat\w+|"
+    r"no longer (?:be )?(?:support\w*|available)|will (?:be )?(?:removed|retired))\b",
+    re.IGNORECASE,
+)
+_DATE_RE = re.compile(
+    r"\b(?:20\d{2}|(?:jan|feb|mar|apr|may|jun|jul|aug|sep|oct|nov|dec)[a-z]*\.?\s+\d{1,2}"
+    r"|\d{1,2}\s+de\s+[a-zç]+)\b",
+    re.IGNORECASE,
+)
+_LABEL_ONLY_RE = re.compile(r"^(important|note|announcement|notice|warning)[:!.]?$", re.IGNORECASE)
+_BANNER_TITLE_MAX = 100
+_BANNER_BODY_MAX = 600
+
+
+def is_notice_banner_line(line: str) -> bool:
+    """True quando a linha parece um banner de aposentadoria/fim de suporte.
+
+    Dois formatos: título curto terminado em "retirement"/"deprecation"
+    (ex.: "Azure Linux with OS Guard retirement") ou aviso curto que combina
+    termo de ciclo de vida com uma data ("... will be retired on 30 November 2025").
+    """
+    text = line.strip()
+    if not text or not _LIFECYCLE_RE.search(text):
+        return False
+    if len(text) <= _BANNER_TITLE_MAX and re.search(
+        r"(retirement|deprecation|end of support|end of life)\W*$", text, re.IGNORECASE
+    ):
+        return True
+    return len(text) <= _BANNER_BODY_MAX and bool(_DATE_RE.search(text))
+
+
+def strip_notice_banners(lines: list[str]) -> list[str]:
+    """Remove banners de ciclo de vida e o rótulo ("Important"/"Note") que os precede."""
+    out: list[str] = []
+    for line in lines:
+        if is_notice_banner_line(line):
+            if out and _LABEL_ONLY_RE.match(out[-1]):
+                out.pop()
+            continue
+        out.append(line)
+    return out
+
+
+def find_notice_banners(text: str) -> list[str]:
+    """Lista, sem alterar nada, as linhas que ``strip_notice_banners`` removeria.
+
+    Uso read-only sobre chunks já ingeridos: ver ``scripts/detect_banners.py``.
+    """
+    return [ln.strip() for ln in text.splitlines() if is_notice_banner_line(ln)]
+
+
 def _text_of(node: Any) -> str:
-    """Texto do nó, uma linha por bloco, sem linhas vazias ou de boilerplate."""
+    """Texto do nó, uma linha por bloco, sem linhas vazias, boilerplate ou banners."""
     raw = node.get_text("\n")
     lines: list[str] = []
     for line in raw.splitlines():
@@ -96,7 +153,7 @@ def _text_of(node: Any) -> str:
         if _is_boilerplate_line(stripped):
             continue
         lines.append(stripped)
-    return "\n".join(lines).strip()
+    return "\n".join(strip_notice_banners(lines)).strip()
 
 
 def clean_html(html: str, *, min_content_chars: int = 500) -> str:

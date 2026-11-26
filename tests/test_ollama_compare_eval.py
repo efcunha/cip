@@ -52,3 +52,25 @@ def test_recount_from_stored_raw(mode: str, expected_on_topic: float) -> None:
     raw = json.loads(path.read_text(encoding="utf-8"))
     summary = model_summary(raw["models"]["google/gemma-3-27b-it"])
     assert summary["in_on_topic"] == pytest.approx(expected_on_topic, abs=0.001)
+
+
+def test_in13_level_names_on_topic_and_vague_not() -> None:
+    ok = "Cinco níveis: Strong, Bounded staleness, Session, Consistent prefix e Eventual [1]."
+    assert is_on_topic({"outcome": "valid", "answer": ok}, _must("in-13"))
+    vague = "Há níveis de consistência [1]."
+    assert not is_on_topic({"outcome": "valid", "answer": vague}, _must("in-13"))
+
+
+def test_in15_accepts_pdb_with_definition() -> None:
+    ok = "Um PDB limita Pods inativos por interrupções voluntárias [1]."
+    assert is_on_topic({"outcome": "valid", "answer": ok}, _must("in-15"))
+    assert not is_on_topic({"outcome": "valid", "answer": "Um PDB é um recurso [1]."}, _must("in-15"))
+
+
+def test_post_ingest_recount() -> None:
+    path = REPORTS / "deepinfra-gemma3-post-ingest-translation-on-raw.json"
+    if not path.exists():
+        pytest.skip("raw eval json not available")
+    raw = json.loads(path.read_text(encoding="utf-8"))
+    summary = model_summary(raw["models"]["google/gemma-3-27b-it"])
+    assert summary["in_on_topic"] == pytest.approx(46 / 48, abs=0.001)

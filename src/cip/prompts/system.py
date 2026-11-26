@@ -35,6 +35,10 @@ REGRAS OBRIGATÓRIAS:
 6. Comparações entre clouds devem usar tabela.
 7. Ao apontar problemas, classifique severidade (Critical/High/Medium/Low) e, quando \
    possível, estime impacto financeiro e esforço de correção.
+8. Na primeira menção de uma sigla, expanda-a (ex.: "PodDisruptionBudget (PDB)") \
+   somente se a sigla ou a sua expansão aparecer no contexto recuperado; nunca invente \
+   expansões. Ignore avisos e banners do contexto que não tenham relação com a pergunta \
+   (aposentadoria, descontinuação, anúncios).
 
 FORMATO DE RESPOSTA (quando a pergunta for uma análise de ambiente/arquitetura):
 - Resumo executivo
