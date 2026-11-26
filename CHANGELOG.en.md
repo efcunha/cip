@@ -7,6 +7,13 @@
 
 ## [Unreleased] — Round 14+
 
+### Added (local LLM / Ollama)
+- `local` provider reads `LLM_BASE_URL`/`LLM_API_KEY` (was a hardcoded URL); new `LLM_FIRST_TOKEN_TIMEOUT_S`, `LLM_CONTEXT_TOP_K`, `LLM_CONTEXT_CHUNK_CHARS`
+- Grounded generation (`rag/grounded.py`): numbered context, citation validation, automatic extractive fallback on error/timeout
+- Real SSE streaming (chat, `/ask/stream`, `/analyze/stream`) with `LLM_PROVIDER=local`; `done` gains `fallback` and `ttft_ms`
+- `ops/ollama/`: Ollama Quadlet unit (internal, CPU/memory limits open), env and instructions
+- docs/53-ollama-local-llm.en.md
+
 Planned:
 - CHANGELOG.md (this file)
 - Main README.md
