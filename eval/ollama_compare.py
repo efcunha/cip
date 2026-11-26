@@ -49,6 +49,7 @@ REPORTS_DIR = Path(__file__).parent / "reports"
 RETRIEVAL_RAW = REPORTS_DIR / "ollama-retrieval-raw.json"
 GENERATION_RAW = REPORTS_DIR / "ollama-generation-raw.json"
 REPORT_MD = REPORTS_DIR / "ollama-model-comparison.md"
+TRANSLATION_RAW = REPORTS_DIR / "deepinfra-gemma3-translation-retrieval-raw.json"
 
 DEFAULT_MODELS = ["qwen2.5:3b-instruct", "gemma3:4b", "qwen2.5:7b-instruct"]
 GROUPS = ("in_rag", "out_of_rag", "ambiguous")
@@ -192,6 +193,66 @@ def phase_retrieval(args: argparse.Namespace) -> dict[str, Any]:
     REPORTS_DIR.mkdir(parents=True, exist_ok=True)
     RETRIEVAL_RAW.write_text(json.dumps(raw, ensure_ascii=False), encoding="utf-8")
     print(f"retrieval: {len(results)} queries -> {RETRIEVAL_RAW}")
+    return raw
+
+
+def phase_translate(args: argparse.Namespace) -> dict[str, Any]:
+    """Traduz as perguntas PT com o ``translate_query`` do engine e recupera com a pergunta em EN.
+
+    Só leitura (mesmo SQL do retrieval). Não toca em ``ollama-retrieval-raw.json``; grava em
+    ``TRANSLATION_RAW`` com chave ``<id>|pt-tr|e5`` + tradução + latência por pergunta.
+    LLM_PROVIDER/LLM_BASE_URL/LLM_MODEL/LLM_API_KEY vêm do ambiente do processo.
+    """
+    import asyncio  # noqa: PLC0415
+
+    from sentence_transformers import SentenceTransformer  # noqa: PLC0415
+
+    from cip.rag.llm import build_llm  # noqa: PLC0415
+    from cip.rag.query_translation import is_non_english, translate_query  # noqa: PLC0415
+
+    questions = load_questions()
+    if args.ids:
+        questions = [q for q in questions if q["id"] in set(args.ids)]
+    llm = build_llm()
+    translations: dict[str, dict[str, Any]] = {}
+
+    async def run() -> None:
+        # warm-up descartado (conexão/TLS), como na geração
+        await translate_query("O que é o Amazon S3?", llm, timeout_s=args.translation_timeout)
+        for q in questions:
+            if not is_non_english(q["question"]):
+                translations[q["id"]] = {"text": q["question"], "translated": False,
+                                         "latency_s": 0.0}
+                continue
+            t0 = time.perf_counter()
+            text = await translate_query(q["question"], llm, timeout_s=args.translation_timeout,
+                                         cache=None)
+            translations[q["id"]] = {"text": text, "translated": text != q["question"],
+                                     "latency_s": time.perf_counter() - t0}
+            print(f"   {q['id']} {translations[q['id']]['latency_s']:.2f}s -> {text[:70]}")
+
+    asyncio.run(run())
+    model = SentenceTransformer(EMBED_MODEL, device="cpu")
+    prefix = VARIANTS[PROD_VARIANT]
+    jobs = [{"key": f"{q['id']}|pt-tr|{PROD_VARIANT}",
+             "text": prefix + translations[q["id"]]["text"]} for q in questions]
+    vecs = model.encode([j["text"] for j in jobs], normalize_embeddings=True, batch_size=16)
+    for j, v in zip(jobs, vecs, strict=True):
+        j["vec"] = [float(x) for x in v]
+    results: dict[str, list] = {}
+    for i in range(0, len(jobs), 40):
+        results.update(run_remote_sql(
+            build_retrieval_sql(jobs[i:i + 40], TOP_K), args.ssh_host, args.pg_user, 300))
+    missing = [j["key"] for j in jobs if j["key"] not in results]
+    if missing:
+        raise RuntimeError(f"retrieval missing {len(missing)} keys, e.g. {missing[:3]}")
+    raw = {
+        "generated_at": datetime.now(UTC).isoformat(), "embed_model": EMBED_MODEL,
+        "top_k": TOP_K, "min_score": MIN_SCORE, "translations": translations, "results": results,
+    }
+    target = Path(args.translation_raw) if args.translation_raw else TRANSLATION_RAW
+    target.write_text(json.dumps(raw, ensure_ascii=False, indent=1), encoding="utf-8")
+    print(f"translate -> {target}")
     return raw
 
 
@@ -380,6 +441,11 @@ def phase_generation(args: argparse.Namespace) -> dict[str, Any]:
     import httpx  # noqa: PLC0415
 
     raw_ret = json.loads(RETRIEVAL_RAW.read_text(encoding="utf-8"))
+    tr_raw: dict[str, Any] | None = None
+    if args.translation == "on":
+        tr_path = Path(args.translation_raw) if args.translation_raw else TRANSLATION_RAW
+        tr_raw = json.loads(tr_path.read_text(encoding="utf-8"))
+        raw_ret = {**raw_ret, "results": {**raw_ret["results"], **tr_raw["results"]}}
     questions = load_questions()
     if args.ids:
         questions = [q for q in questions if q["id"] in set(args.ids)]
@@ -395,6 +461,7 @@ def phase_generation(args: argparse.Namespace) -> dict[str, Any]:
         "generated_at": datetime.now(UTC).isoformat(), "ollama": args.ollama,
         "runs": args.runs, "num_gpu": args.num_gpu, "num_ctx": NUM_CTX,
         "max_tokens": MAX_TOKENS, "temperature": TEMPERATURE, "models": {},
+        "translation": args.translation,
     }
     openai = args.backend == "openai"
     api_key = ""
@@ -423,16 +490,21 @@ def phase_generation(args: argparse.Namespace) -> dict[str, Any]:
             print(f"   warm-up: {warm.get('total_s', 0):.1f}s {warm.get('error', '')}")
             records: list[dict[str, Any]] = []
             for q in questions:
-                nodes, n_above = nodes_for(raw_ret, q["id"])
+                nodes, n_above = nodes_for(raw_ret, q["id"], "pt-tr" if tr_raw else "pt")
                 if not nodes:  # gate min_score: o engine recusa sem chamar o LLM
                     records.append({"id": q["id"], "group": q["group"], "outcome": "gated",
-                                    "n_above": n_above, "run": 0})
+                                    "n_above": n_above, "run": 0,
+                                    **({"translation_s": tr_raw["translations"][q["id"]]
+                                                        ["latency_s"]}
+                                       if tr_raw else {})})
                     continue
                 system, user = build_grounded_messages(q["question"], nodes, LLM_CHUNK_CHARS)
                 for run in range(1, args.runs + 1):
                     r = gen(client, model, system, user)
                     rec: dict[str, Any] = {"id": q["id"], "group": q["group"], "run": run,
                                            "n_above": n_above, "n_ctx_nodes": len(nodes), **r}
+                    if tr_raw:
+                        rec["translation_s"] = tr_raw["translations"][q["id"]]["latency_s"]
                     if r.get("error") or not r["answer"]:
                         rec["outcome"], rec["reason"] = "invalid", r.get("error", "empty_answer")
                     else:
@@ -618,7 +690,7 @@ def phase_report(args: argparse.Namespace) -> str:
 # --------------------------------------------------------------------------- cli
 def main() -> int:
     p = argparse.ArgumentParser(description=__doc__.split("\n")[0])
-    p.add_argument("phase", choices=["retrieval", "generation", "report", "all"])
+    p.add_argument("phase", choices=["retrieval", "translate", "generation", "report", "all"])
     p.add_argument("--models", nargs="+", default=DEFAULT_MODELS)
     p.add_argument("--ollama", default="http://localhost:11434")
     p.add_argument("--backend", choices=["ollama", "openai"], default="ollama",
@@ -634,11 +706,17 @@ def main() -> int:
     p.add_argument("--out", help="arquivo JSON de saída da geração")
     p.add_argument("--gen", help="arquivo JSON de geração usado no relatório")
     p.add_argument("--report-out", help="arquivo Markdown de saída")
+    p.add_argument("--translation", choices=["on", "off"], default="off",
+                   help="on = recupera com a pergunta PT traduzida (fase translate)")
+    p.add_argument("--translation-raw", help="JSON da fase translate")
+    p.add_argument("--translation-timeout", type=float, default=5.0)
     p.add_argument("--ssh-host", default="cloudpilot")
     p.add_argument("--pg-user", default="cloudpilot")
     args = p.parse_args()
     if args.phase in ("retrieval", "all"):
         phase_retrieval(args)
+    if args.phase == "translate":
+        phase_translate(args)
     if args.phase in ("generation", "all"):
         phase_generation(args)
     if args.phase in ("report", "all"):
