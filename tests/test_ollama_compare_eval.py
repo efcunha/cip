@@ -64,7 +64,8 @@ def test_in13_level_names_on_topic_and_vague_not() -> None:
 def test_in15_accepts_pdb_with_definition() -> None:
     ok = "Um PDB limita Pods inativos por interrupções voluntárias [1]."
     assert is_on_topic({"outcome": "valid", "answer": ok}, _must("in-15"))
-    bare = "Um PDB é um recurso [1]."\n    assert not is_on_topic({"outcome": "valid", "answer": bare}, _must("in-15"))
+    bare = "Um PDB é um recurso [1]."
+    assert not is_on_topic({"outcome": "valid", "answer": bare}, _must("in-15"))
 
 
 def test_post_ingest_recount() -> None:
