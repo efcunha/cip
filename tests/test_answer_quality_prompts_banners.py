@@ -42,6 +42,10 @@ def test_aks_banner_detected() -> None:
     [
         "Note: run az aks nodepool add before scaling the pool.",
         "Warning: deleting a node pool removes all its nodes.",
+        "Note: the --foo flag is deprecated since 2023. Use --bar instead.",
+        "Warning: kubenet will be retired on 31 March 2028. Migrate to Azure CNI Overlay.",
+        "API deprecation",
+        "Deprecation",
         "System node pools serve the primary purpose of hosting critical system pods.",
         "",
     ],

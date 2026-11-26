@@ -104,7 +104,15 @@ _DATE_RE = re.compile(
 )
 _LABEL_ONLY_RE = re.compile(r"^(important|note|announcement|notice|warning)[:!.]?$", re.IGNORECASE)
 _BANNER_TITLE_MAX = 100
+_BANNER_TITLE_MIN_WORDS = 3
 _BANNER_BODY_MAX = 600
+# Procedural lines (Note/Warning with content, commands, flags, requested action)
+# are never banners, even when they mention lifecycle terms and a date.
+_PROCEDURAL_RE = re.compile(
+    r"^(?:note|warning|caution|tip|important)\s*:|`|--\w|\b(?:az|kubectl|helm|terraform)\s+\w"
+    r"|\b(?:migrate|instead|upgrade to|switch to|before upgrading|you (?:must|should|can))\b",
+    re.IGNORECASE,
+)
 
 
 def is_notice_banner_line(line: str) -> bool:
@@ -115,12 +123,13 @@ def is_notice_banner_line(line: str) -> bool:
     termo de ciclo de vida com uma data ("... will be retired on 30 November 2025").
     """
     text = line.strip()
-    if not text or not _LIFECYCLE_RE.search(text):
+    if not text or not _LIFECYCLE_RE.search(text) or _PROCEDURAL_RE.search(text):
         return False
     if len(text) <= _BANNER_TITLE_MAX and re.search(
         r"(retirement|deprecation|end of support|end of life)\W*$", text, re.IGNORECASE
     ):
-        return True
+        # A banner title names a product plus "retirement"; a bare "Deprecation" is a heading.
+        return len(text.split()) >= _BANNER_TITLE_MIN_WORDS
     return len(text) <= _BANNER_BODY_MAX and bool(_DATE_RE.search(text))
 
 
