@@ -7,6 +7,18 @@
 
 ## [Unreleased] — Round 14+
 
+### Adicionado (DeepInfra / Gemma 3 27B)
+- Deploy em produção com `LLM_PROVIDER=local` apontando para DeepInfra (`google/gemma-3-27b-it`), fallback extrativo mantido
+- Ingestão de 3 páginas (Cosmos DB consistency levels, K8s pod disruptions, AKS node pools): 2928 -> 2973 chunks
+- Relatórios de avaliação em `eval/reports/` (pós-ingestão: falsa recusa in-RAG 19% -> 0%)
+
+### Adicionado (LLM local / Ollama)
+- Provider `local` lê `LLM_BASE_URL`/`LLM_API_KEY` (antes URL fixa); novos `LLM_FIRST_TOKEN_TIMEOUT_S`, `LLM_CONTEXT_TOP_K`, `LLM_CONTEXT_CHUNK_CHARS`
+- Geração fundamentada (`rag/grounded.py`): contexto numerado, validação de citações, fallback extrativo automático em erro/timeout
+- Streaming SSE real (chat, `/ask/stream`, `/analyze/stream`) com `LLM_PROVIDER=local`; `done` ganha `fallback` e `ttft_ms`
+- `ops/ollama/`: unit Quadlet do Ollama (interno, limites de CPU/memória em aberto), env e instruções
+- docs/53-ollama-local-llm.md
+
 Planejado:
 - CHANGELOG.md (este arquivo)
 - README.md principal

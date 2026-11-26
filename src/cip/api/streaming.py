@@ -22,14 +22,16 @@ data: {"answer": "Este é um exemplo.", "sources": [...]}
 - Cliente pode escolher via URL
 
 **Chunking strategy:**
-- Se o LLM suporta streaming (async_generate ou similar), usa token-by-token
-- Caso contrário (stub LLM), chunka a resposta completa em pedaços ~50 chars
+- LLM_PROVIDER=local (Ollama): streaming REAL token-by-token via
+  `stream_live_events` (deltas emitidos assim que o modelo os produz)
+- Demais providers: chunka a resposta completa em pedaços ~50 chars (`stream_text`)
 """
 
 from __future__ import annotations
 
 import asyncio
 import json
+import time
 from typing import Any, AsyncIterator
 
 from cip.logging import get_logger
@@ -116,6 +118,31 @@ async def stream_rag_result(
         "refusal_reason": refusal_reason,
         "from_cache": from_cache,
     })
+
+
+async def stream_live_events(
+    events: AsyncIterator[tuple[str, Any]], state: dict[str, Any]
+) -> AsyncIterator[str]:
+    """Converte eventos ``("delta", str)`` em SSE ``chunk`` assim que chegam.
+
+    O evento final ``("result", obj)`` não vira SSE: fica em ``state["result"]``
+    para o chamador montar o ``done``. ``state["ttft_ms"]`` recebe o tempo até o
+    primeiro delta. Contrato SSE existente (chunk/done/error) permanece igual.
+    """
+    t0 = time.perf_counter()
+    state.setdefault("ttft_ms", None)
+    state["result"] = None
+    async for kind, payload in events:
+        if kind == "delta":
+            if not payload:
+                continue
+            if state["ttft_ms"] is None:
+                state["ttft_ms"] = int((time.perf_counter() - t0) * 1000)
+            yield format_sse_event(EVENT_CHUNK, {"delta": payload})
+        elif kind == "result":
+            state["result"] = payload
+    if state["result"] is None:
+        raise RuntimeError("stream ended without a result event")
 
 
 async def stream_error(message: str, code: str = "internal_error") -> AsyncIterator[str]:

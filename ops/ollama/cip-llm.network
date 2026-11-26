@@ -1,0 +1,7 @@
+# Dedicated network for Ollama <-> cip-api (isolated from cloudpilot.network).
+[Network]
+NetworkName=cip-llm
+# Internal=false: the container must reach the registry once for `ollama pull`.
+# After the model is pulled you may switch to Internal=true (no egress); cip-api then
+# needs to stay on this network AND on cloudpilot.network (it already is).
+Internal=false

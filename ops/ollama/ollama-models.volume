@@ -1,0 +1,3 @@
+# Model store for Ollama (2-5 GB per small model).
+[Volume]
+VolumeName=ollama-models

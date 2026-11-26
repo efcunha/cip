@@ -1,0 +1,7 @@
+# Derived model "cip-llm". Render @BASE_MODEL@ and @THREADS@ (see README.md).
+# Per-request options cannot be set through Ollama's OpenAI /v1 endpoint, so they live here.
+FROM @BASE_MODEL@
+PARAMETER temperature 0.1
+PARAMETER num_ctx 4096
+PARAMETER num_thread @THREADS@
+PARAMETER num_predict 512

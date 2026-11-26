@@ -9,10 +9,11 @@ from __future__ import annotations
 import os
 from typing import Any
 
+from llama_index.core.llms import CompletionResponse, CustomLLM, LLMMetadata
+
 from cip.config import get_settings
 from cip.logging import get_logger
 
-from llama_index.core.llms import CompletionResponse, CustomLLM, LLMMetadata
 log = get_logger(__name__)
 
 
@@ -73,17 +74,17 @@ class _StubLLM(CustomLLM):
     """
 
     @property
-    def metadata(self) -> "LLMMetadata":
+    def metadata(self) -> LLMMetadata:
         return LLMMetadata(
             model_name="stub",
             is_chat_model=False,
             num_output=512,
         )
 
-    def complete(self, prompt: str, **kwargs: Any) -> "CompletionResponse":
+    def complete(self, prompt: str, **kwargs: Any) -> CompletionResponse:
         return CompletionResponse(text=_stub_response(prompt))
 
-    async def acomplete(self, prompt: str, **kwargs: Any) -> "CompletionResponse":
+    async def acomplete(self, prompt: str, **kwargs: Any) -> CompletionResponse:
         return CompletionResponse(text=_stub_response(prompt))
 
     def stream_complete(self, prompt: str, **kwargs: Any):
@@ -144,13 +145,13 @@ class _ExtractiveLLM(CustomLLM):
     """
 
     @property
-    def metadata(self) -> "LLMMetadata":
+    def metadata(self) -> LLMMetadata:
         return LLMMetadata(model_name="extractive", is_chat_model=False, num_output=0)
 
-    def complete(self, prompt: str, **kwargs: Any) -> "CompletionResponse":
+    def complete(self, prompt: str, **kwargs: Any) -> CompletionResponse:
         raise RuntimeError("extractive mode: LLM generation disabled (no external model).")
 
-    async def acomplete(self, prompt: str, **kwargs: Any) -> "CompletionResponse":
+    async def acomplete(self, prompt: str, **kwargs: Any) -> CompletionResponse:
         raise RuntimeError("extractive mode: LLM generation disabled (no external model).")
 
     def stream_complete(self, prompt: str, **kwargs: Any):
@@ -209,13 +210,16 @@ def build_llm() -> Any:
         )
 
     if provider == "local":
-        # Ex.: servidor OpenAI-compatible (vLLM/Ollama) hospedando Llama 3.3 70B.
+        # Servidor OpenAI-compatible (Ollama /v1, vLLM). URL e chave vêm de
+        # LLM_BASE_URL / LLM_API_KEY; vazio mantém o default histórico (vLLM local).
         from llama_index.llms.openai_like import OpenAILike
 
+        api_base = settings.llm_base_url or "http://localhost:8001/v1"
+        log.info("local_llm_active", model=settings.llm_model, api_base=api_base)
         return OpenAILike(
             model=settings.llm_model,
-            api_base="http://localhost:8001/v1",
-            api_key="not-needed",
+            api_base=api_base,
+            api_key=settings.llm_api_key or "not-needed",
             context_window=settings.llm_context_size,
             temperature=settings.llm_temperature,
             max_tokens=settings.llm_max_tokens,
@@ -308,7 +312,7 @@ def build_llm() -> Any:
                     )
 
                 @property
-                def metadata(self) -> "LLMMetadata":
+                def metadata(self) -> LLMMetadata:
                     return LLMMetadata(
                         model_name=settings.llm_model,
                         is_chat_model=True,
@@ -337,10 +341,10 @@ def build_llm() -> Any:
                         except Exception:  # noqa: BLE001
                             pass
 
-                def complete(self, prompt: str, **kwargs: Any) -> "CompletionResponse":
+                def complete(self, prompt: str, **kwargs: Any) -> CompletionResponse:
                     return CompletionResponse(text=self._call_chat(prompt))
 
-                async def acomplete(self, prompt: str, **kwargs: Any) -> "CompletionResponse":
+                async def acomplete(self, prompt: str, **kwargs: Any) -> CompletionResponse:
                     return CompletionResponse(text=self._call_chat(prompt))
 
                 def stream_complete(self, prompt: str, **kwargs: Any):
@@ -421,7 +425,7 @@ def build_llm() -> Any:
                     )
 
                 @property
-                def metadata(self) -> "LLMMetadata":
+                def metadata(self) -> LLMMetadata:
                     return LLMMetadata(
                         model_name=settings.llm_model,
                         is_chat_model=True,
@@ -445,10 +449,10 @@ def build_llm() -> Any:
                         except Exception:  # noqa: BLE001
                             pass
 
-                def complete(self, prompt: str, **kwargs: Any) -> "CompletionResponse":
+                def complete(self, prompt: str, **kwargs: Any) -> CompletionResponse:
                     return CompletionResponse(text=self._call_chat(prompt))
 
-                async def acomplete(self, prompt: str, **kwargs: Any) -> "CompletionResponse":
+                async def acomplete(self, prompt: str, **kwargs: Any) -> CompletionResponse:
                     return CompletionResponse(text=self._call_chat(prompt))
 
                 def stream_complete(self, prompt: str, **kwargs: Any):
