@@ -47,6 +47,9 @@ Eventos continuam `chunk` / `done` / `error`. Campos novos (aditivos) em `done`:
 | `LLM_FIRST_TOKEN_TIMEOUT_S` | 30 | |
 | `LLM_CONTEXT_TOP_K` | 4 | trechos enviados ao modelo |
 | `LLM_CONTEXT_CHUNK_CHARS` | 1200 | |
+| `QUERY_TRANSLATION_ENABLED` | true | traduz PT-BR -> EN antes do retrieval; só com LLM real |
+| `QUERY_TRANSLATION_TIMEOUT_S` | 5 | timeout/falha usa a pergunta original |
+| `QUERY_TRANSLATION_CACHE_TTL_S` | 86400 | TTL do cache de traduções |
 
 `num_ctx`, `num_thread`, `keep_alive` não podem ser definidos por requisição via `/v1`; ficam
 no env do servidor Ollama e no Modelfile derivado (`ops/ollama/`).

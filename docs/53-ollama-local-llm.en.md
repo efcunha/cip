@@ -47,6 +47,9 @@ Events stay `chunk` / `done` / `error`. Additive `done` fields: `fallback` (stri
 | `LLM_FIRST_TOKEN_TIMEOUT_S` | 30 | |
 | `LLM_CONTEXT_TOP_K` | 4 | chunks sent to the model |
 | `LLM_CONTEXT_CHUNK_CHARS` | 1200 | |
+| `QUERY_TRANSLATION_ENABLED` | true | translates PT-BR -> EN before retrieval; real LLM only |
+| `QUERY_TRANSLATION_TIMEOUT_S` | 5 | on timeout/failure the original question is used |
+| `QUERY_TRANSLATION_CACHE_TTL_S` | 86400 | translation cache TTL |
 
 `num_ctx`, `num_thread`, `keep_alive` cannot be set per request through `/v1`; they live in
 Ollama server env and the derived Modelfile (`ops/ollama/`).
