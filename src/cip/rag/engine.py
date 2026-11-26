@@ -210,7 +210,17 @@ class RagEngine:
             system_prompt=SENIOR_ENGINEER_SYSTEM_PROMPT,
         )
 
-        response = await query_engine.aquery(question)
+        # Query translation: ingles so para o embedding; o gerador ve o original.
+        retrieval_query = await self._maybe_translate(question, tenant_id, include_global)
+        if retrieval_query != question:
+            from llama_index.core.schema import QueryBundle
+
+            bundle: Any = QueryBundle(
+                query_str=question, custom_embedding_strs=[retrieval_query]
+            )
+        else:
+            bundle = question
+        response = await query_engine.aquery(bundle)
 
         # Filtra nós abaixo do score mínimo (anti-alucinação) + tenant scope.
         nodes = [

@@ -143,3 +143,50 @@ async def test_engine_skips_when_disabled_or_extractive() -> None:
         q = "Como criar um bucket S3?"
         assert await eng._maybe_translate(q, None, True) == q
         assert llm.tcalls == 0
+
+
+class _QE:
+    def __init__(self, sink: list[Any], nodes: list[Any]) -> None:
+        self.sink, self.nodes = sink, nodes
+
+    async def aquery(self, q: Any) -> Any:
+        self.sink.append(q)
+        return SimpleNamespace(source_nodes=self.nodes, __str__=lambda s: "ok")
+
+
+class _QEIndex:
+    def __init__(self, sink: list[Any], nodes: list[Any]) -> None:
+        self.sink, self.nodes = sink, nodes
+
+    def as_query_engine(self, **kw: Any) -> _QE:
+        return _QE(self.sink, self.nodes)
+
+
+def _nonlocal_engine(sink: list[Any], llm: Any) -> Any:
+    eng = _engine([_node(1)], llm, llm_provider="openai")
+    eng._index = _QEIndex(sink, [_node(1)])
+    return eng
+
+
+async def test_nonlocal_provider_translates_for_embedding_only() -> None:
+    from cip.rag.query_translation import reset_translation_cache
+
+    reset_translation_cache()
+    sink: list[Any] = []
+    llm = _Both()
+    eng = _nonlocal_engine(sink, llm)
+    q = "Como criar um bucket S3?"
+    res = await eng.query(q)
+    bundle = sink[0]
+    assert bundle.query_str == q
+    assert bundle.embedding_strs == ["How to create an S3 bucket?"]
+    assert llm.tcalls == 1 and res.has_grounding
+
+
+async def test_nonlocal_provider_english_no_extra_call() -> None:
+    sink: list[Any] = []
+    llm = _Both()
+    eng = _nonlocal_engine(sink, llm)
+    q = "How do I create an S3 bucket?"
+    await eng.query(q)
+    assert sink == [q] and llm.tcalls == 0
