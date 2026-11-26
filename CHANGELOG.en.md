@@ -7,6 +7,11 @@
 
 ## [Unreleased] — Round 14+
 
+### Added (DeepInfra / Gemma 3 27B)
+- Production deploy with `LLM_PROVIDER=local` pointing to DeepInfra (`google/gemma-3-27b-it`), extractive fallback kept
+- Ingested 3 pages (Cosmos DB consistency levels, K8s pod disruptions, AKS node pools): 2928 -> 2973 chunks
+- Eval reports in `eval/reports/` (post-ingest: in-RAG false refusal 19% -> 0%)
+
 ### Added (local LLM / Ollama)
 - `local` provider reads `LLM_BASE_URL`/`LLM_API_KEY` (was a hardcoded URL); new `LLM_FIRST_TOKEN_TIMEOUT_S`, `LLM_CONTEXT_TOP_K`, `LLM_CONTEXT_CHUNK_CHARS`
 - Grounded generation (`rag/grounded.py`): numbered context, citation validation, automatic extractive fallback on error/timeout
