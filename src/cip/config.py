@@ -38,6 +38,10 @@ class Settings(BaseSettings):
     llm_max_tokens: int = 2048          # teto de saída (default do SDK é 512 = trunca)
     llm_timeout_s: float = 60.0         # timeout da chamada ao provedor
     llm_max_retries: int = 2            # baixo: evita retry storm sob carga
+    # Caminho local (Ollama): timeout do 1o token e quanto contexto vai ao modelo pequeno.
+    llm_first_token_timeout_s: float = 30.0
+    llm_context_top_k: int = 4          # chunks enviados ao LLM local (<= retrieval_top_k)
+    llm_context_chunk_chars: int = 1200  # trunca cada chunk no prompt
     # OpenAI-compatible providers (openai, local, minimax, deepseek) — credenciais + base URL.
     # Para MiniMax M3 o DSH canônico é MINIMAX_API_KEY — também aceito.
     llm_api_key: str = ""               # override de LLM_API_KEY

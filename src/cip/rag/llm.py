@@ -209,13 +209,16 @@ def build_llm() -> Any:
         )
 
     if provider == "local":
-        # Ex.: servidor OpenAI-compatible (vLLM/Ollama) hospedando Llama 3.3 70B.
+        # Servidor OpenAI-compatible (Ollama /v1, vLLM). URL e chave vêm de
+        # LLM_BASE_URL / LLM_API_KEY; vazio mantém o default histórico (vLLM local).
         from llama_index.llms.openai_like import OpenAILike
 
+        api_base = settings.llm_base_url or "http://localhost:8001/v1"
+        log.info("local_llm_active", model=settings.llm_model, api_base=api_base)
         return OpenAILike(
             model=settings.llm_model,
-            api_base="http://localhost:8001/v1",
-            api_key="not-needed",
+            api_base=api_base,
+            api_key=settings.llm_api_key or "not-needed",
             context_window=settings.llm_context_size,
             temperature=settings.llm_temperature,
             max_tokens=settings.llm_max_tokens,
