@@ -375,6 +375,34 @@ class RagEngine:
 
         return LlamaSettings.llm
 
+    async def _maybe_translate(
+        self, question: str, tenant_id: str | None, include_global: bool
+    ) -> str:
+        """Pergunta em ingles so para o retrieval; original em falha/skip."""
+        s = self._settings
+        if not getattr(s, "query_translation_enabled", True):
+            return question
+        if s.llm_provider in ("extractive", "stub"):
+            return question
+        from cip.rag.query_translation import (
+            get_translation_cache,
+            is_non_english,
+            translate_query,
+        )
+
+        if not is_non_english(question):
+            return question
+        return await translate_query(
+            question,
+            self._get_llm(),
+            timeout_s=float(getattr(s, "query_translation_timeout_s", 5.0)),
+            tenant_id=tenant_id,
+            include_global=include_global,
+            cache=get_translation_cache(
+                float(getattr(s, "query_translation_cache_ttl_s", 86400.0))
+            ),
+        )
+
     async def _open_chat_stream(self, llm: Any, messages: list[Any]) -> Any:
         stream = llm.astream_chat(messages)
         if inspect.isawaitable(stream):
@@ -437,7 +465,8 @@ class RagEngine:
 
         filters = self._build_filters(cloud, service, category)
         retriever = self._index.as_retriever(similarity_top_k=eff_top_k, filters=filters)
-        nodes = await retriever.aretrieve(question)
+        retrieval_query = await self._maybe_translate(question, tenant_id, include_global)
+        nodes = await retriever.aretrieve(retrieval_query)
         nodes = [n for n in nodes if (n.score or 0) >= eff_min]
         nodes = self._apply_tenant_scope(nodes, tenant_id, include_global)
 

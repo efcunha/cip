@@ -42,6 +42,10 @@ class Settings(BaseSettings):
     llm_first_token_timeout_s: float = 30.0
     llm_context_top_k: int = 4          # chunks enviados ao LLM local (<= retrieval_top_k)
     llm_context_chunk_chars: int = 1200  # trunca cada chunk no prompt
+    # Query translation (PT-BR -> EN) antes do retrieval; so com LLM real.
+    query_translation_enabled: bool = True
+    query_translation_timeout_s: float = 5.0
+    query_translation_cache_ttl_s: float = 86400.0
     # OpenAI-compatible providers (openai, local, minimax, deepseek) — credenciais + base URL.
     # Para MiniMax M3 o DSH canônico é MINIMAX_API_KEY — também aceito.
     llm_api_key: str = ""               # override de LLM_API_KEY
