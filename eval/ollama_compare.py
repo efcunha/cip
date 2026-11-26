@@ -95,6 +95,19 @@ def mention_hits(answer: str, terms: list[str]) -> tuple[int, int]:
     return hits, len(terms)
 
 
+def is_on_topic(record: dict[str, Any], must: list[str]) -> bool:
+    """Resposta in-RAG valida E que cobre todos os ``must_mention`` (recalculado da resposta).
+
+    ``outcome == "valid"`` so prova citacao valida e conteudo; uma resposta fora de assunto
+    com citacao valida tambem passa. Exigir todos os termos (topicos discriminantes na
+    pergunta) evita contar essa resposta como acerto.
+    """
+    if record.get("outcome") != "valid":
+        return False
+    hits, total = mention_hits(record.get("answer", ""), must)
+    return hits == total
+
+
 def forbidden_hits(answer: str, terms: list[str]) -> list[str]:
     low = _fold(answer)
     return [t for t in terms if _fold(t) in low]
@@ -544,6 +557,7 @@ def normalize(records: list[dict[str, Any]]) -> list[dict[str, Any]]:
 
 def model_summary(records: list[dict[str, Any]]) -> dict[str, Any]:
     records = normalize(records)
+    must_by_id = {q["id"]: q.get("must_mention") or [] for q in load_questions()}
     llm = [r for r in records if r["outcome"] != "gated"]
     ok_lat = [r for r in llm if not r.get("error") and r.get("ttft_s") is not None]
     ttft = [r["ttft_s"] for r in ok_lat]
@@ -578,6 +592,10 @@ def model_summary(records: list[dict[str, Any]]) -> dict[str, Any]:
         "in_valid": rate(sum(1 for r in inr if r["outcome"] == "valid"), len(inr)),
         "in_false_refusal": rate(sum(1 for r in inr if r["outcome"] in ("declined", "gated")),
                                  len(inr)),
+        "in_on_topic": rate(sum(1 for r in inr if is_on_topic(r, must_by_id.get(r["id"], []))),
+                            len(inr)),
+        "in_off_topic_valid": sum(1 for r in inr if r["outcome"] == "valid"
+                                  and not is_on_topic(r, must_by_id.get(r["id"], []))),
         "in_fallback": rate(sum(1 for r in inr if r["outcome"] == "invalid"), len(inr)),
         "in_mention": med(mention) if mention else float("nan"),
         "out_refused": rate(sum(1 for r in oor if r["outcome"] in ("declined", "gated")),
@@ -617,9 +635,10 @@ def phase_report(args: argparse.Namespace) -> str:
             "| Model | Answers | Answer TTFT cold, run 1 (s) | Answer TTFT med (s) | "
             "Answer TTFT p95 (s) | Answer total med (s) "
             "| Answer total p95 (s) | All-calls TTFT med (s) | All-calls total med (s) | tok/s | "
-            "Citation-valid | In-RAG valid | In-RAG false refusal | In-RAG fallback | "
+            "Citation-valid | In-RAG valid | In-RAG on-topic | In-RAG false refusal | "
+            "In-RAG fallback | "
             "no_content | loose decline | must_mention |",
-            "|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|",
+            "|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|",
         ]
         sums = {m: model_summary(r) for m, r in gen["models"].items()}
         for m, s in sums.items():
@@ -630,7 +649,8 @@ def phase_report(args: argparse.Namespace) -> str:
                 f"{fmt_num(s['a_total_p95'])} | {fmt_num(s['ttft_med'])} | "
                 f"{fmt_num(s['total_med'])} | {fmt_num(s['tps_med'], 1)} | "
                 f"{fmt_pct(s['citation_valid_rate'])} | {fmt_pct(s['in_valid'])} | "
-                f"{fmt_pct(s['in_false_refusal'])} | {fmt_pct(s['in_fallback'])} | "
+                f"{fmt_pct(s['in_on_topic'])} | {fmt_pct(s['in_false_refusal'])} | "
+                f"{fmt_pct(s['in_fallback'])} | "
                 f"{s['no_content']} | {s['loose_declines']} | {fmt_pct(s['in_mention'])} |")
         lines += ["", "## Refusal correctness per model", "",
                   "| Model | Out-of-RAG refused (total) | by model | gated by min_score | "
