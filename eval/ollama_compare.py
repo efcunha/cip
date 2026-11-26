@@ -22,6 +22,7 @@ from __future__ import annotations
 
 import argparse
 import json
+import os
 import re
 import statistics
 import subprocess
@@ -327,6 +328,54 @@ def stream_chat(client: Any, base: str, model: str, system: str, user: str,
     }
 
 
+def stream_chat_openai(client: Any, base: str, model: str, system: str, user: str,
+                       api_key: str, max_tokens: int, timeout: float) -> dict[str, Any]:
+    """Uma geração via /chat/completions (OpenAI-compatible, ex. DeepInfra) com streaming.
+
+    Mede TTFT e total (wall-clock). A chave vai só no header Authorization; nunca é gravada.
+    """
+    body = {
+        "model": model, "stream": True, "temperature": TEMPERATURE, "max_tokens": max_tokens,
+        "stream_options": {"include_usage": True},
+        "messages": [{"role": "system", "content": system}, {"role": "user", "content": user}],
+    }
+    headers = {"Authorization": f"Bearer {api_key}"}
+    t0 = time.perf_counter()
+    ttft: float | None = None
+    parts: list[str] = []
+    usage: dict[str, Any] = {}
+    try:
+        with client.stream("POST", f"{base.rstrip('/')}/chat/completions", json=body,
+                           headers=headers, timeout=timeout) as resp:
+            resp.raise_for_status()
+            for line in resp.iter_lines():
+                if not line or not line.startswith("data:"):
+                    continue
+                payload = line[5:].strip()
+                if payload == "[DONE]":
+                    break
+                obj = json.loads(payload)
+                if obj.get("usage"):
+                    usage = obj["usage"]
+                choices = obj.get("choices") or []
+                piece = ((choices[0].get("delta") or {}).get("content") or "") if choices else ""
+                if piece:
+                    if ttft is None:
+                        ttft = time.perf_counter() - t0
+                    parts.append(piece)
+    except Exception as exc:  # noqa: BLE001 - registrar e seguir (equivale a fallback no engine)
+        return {"error": f"{type(exc).__name__}: {exc}"[:300], "answer": "".join(parts),
+                "ttft_s": ttft, "total_s": time.perf_counter() - t0}
+    total = time.perf_counter() - t0
+    ev_n = usage.get("completion_tokens") or 0
+    gen_s = total - (ttft or 0.0)
+    return {
+        "answer": "".join(parts).strip(), "ttft_s": ttft, "total_s": total,
+        "eval_count": ev_n, "tokens_per_s": (ev_n / gen_s) if ev_n and gen_s > 0 else None,
+        "prompt_tokens": usage.get("prompt_tokens"), "load_s": 0.0,
+    }
+
+
 def phase_generation(args: argparse.Namespace) -> dict[str, Any]:
     import httpx  # noqa: PLC0415
 
@@ -347,14 +396,30 @@ def phase_generation(args: argparse.Namespace) -> dict[str, Any]:
         "runs": args.runs, "num_gpu": args.num_gpu, "num_ctx": NUM_CTX,
         "max_tokens": MAX_TOKENS, "temperature": TEMPERATURE, "models": {},
     }
+    openai = args.backend == "openai"
+    api_key = ""
+    if openai:
+        api_key = os.environ.get(args.api_key_env, "")
+        if not api_key:
+            raise SystemExit(f"{args.api_key_env} não definida no ambiente; nada foi chamado")
+        out["backend"], out["ollama"] = "openai", args.base_url
+        out["max_tokens"] = args.max_tokens
+
+    def gen(client: Any, model: str, system: str, user: str) -> dict[str, Any]:
+        if openai:
+            return stream_chat_openai(client, args.base_url, model, system, user,
+                                      api_key, args.max_tokens, args.timeout)
+        return stream_chat(client, args.ollama, model, system, user, args.num_gpu, args.timeout)
+
     with httpx.Client() as client:
-        ver = client.get(f"{args.ollama}/api/version", timeout=10).json()
-        out["ollama_version"] = ver.get("version")
+        if not openai:
+            ver = client.get(f"{args.ollama}/api/version", timeout=10).json()
+            out["ollama_version"] = ver.get("version")
         for model in args.models:
             print(f"== {model}")
             # warm-up descartado (carrega o modelo na memória)
             sysm, usr = build_grounded_messages("O que é o Amazon S3?", [], LLM_CHUNK_CHARS)
-            warm = stream_chat(client, args.ollama, model, sysm, usr, args.num_gpu, args.timeout)
+            warm = gen(client, model, sysm, usr)
             print(f"   warm-up: {warm.get('total_s', 0):.1f}s {warm.get('error', '')}")
             records: list[dict[str, Any]] = []
             for q in questions:
@@ -365,8 +430,7 @@ def phase_generation(args: argparse.Namespace) -> dict[str, Any]:
                     continue
                 system, user = build_grounded_messages(q["question"], nodes, LLM_CHUNK_CHARS)
                 for run in range(1, args.runs + 1):
-                    r = stream_chat(client, args.ollama, model, system, user,
-                                    args.num_gpu, args.timeout)
+                    r = gen(client, model, system, user)
                     rec: dict[str, Any] = {"id": q["id"], "group": q["group"], "run": run,
                                            "n_above": n_above, "n_ctx_nodes": len(nodes), **r}
                     if r.get("error") or not r["answer"]:
@@ -383,8 +447,9 @@ def phase_generation(args: argparse.Namespace) -> dict[str, Any]:
                           f"ttft={(r.get('ttft_s') or 0):.1f}s total={r['total_s']:.1f}s")
             out["models"][model] = records
             # libera RAM/VRAM antes do próximo candidato
-            client.post(f"{args.ollama}/api/generate",
-                        json={"model": model, "keep_alive": 0}, timeout=60)
+            if not openai:
+                client.post(f"{args.ollama}/api/generate",
+                            json={"model": model, "keep_alive": 0}, timeout=60)
     REPORTS_DIR.mkdir(parents=True, exist_ok=True)
     target = Path(args.out) if args.out else GENERATION_RAW
     target.write_text(json.dumps(out, ensure_ascii=False, indent=1), encoding="utf-8")
@@ -556,6 +621,11 @@ def main() -> int:
     p.add_argument("phase", choices=["retrieval", "generation", "report", "all"])
     p.add_argument("--models", nargs="+", default=DEFAULT_MODELS)
     p.add_argument("--ollama", default="http://localhost:11434")
+    p.add_argument("--backend", choices=["ollama", "openai"], default="ollama",
+                   help="openai = API OpenAI-compatible (ex. DeepInfra); chave só via env")
+    p.add_argument("--base-url", default="https://api.deepinfra.com/v1/openai")
+    p.add_argument("--api-key-env", default="DEEPINFRA_API_KEY")
+    p.add_argument("--max-tokens", type=int, default=1024)
     p.add_argument("--runs", type=int, default=3)
     p.add_argument("--num-gpu", type=int, default=None, help="0 força CPU-only")
     p.add_argument("--timeout", type=float, default=300.0)
