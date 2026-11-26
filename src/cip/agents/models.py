@@ -52,6 +52,7 @@ class AnalysisResult(BaseModel):
     sources: list[dict] = Field(default_factory=list)
     tools_used: list[str] = Field(default_factory=list)
     plan: AnalysisPlan | None = None
+    fallback: str | None = None  # motivo do fallback extrativo (LLM local)
 
     def prioritized_findings(self) -> list[Finding]:
         order = {"critical": 0, "high": 1, "medium": 2, "low": 3}

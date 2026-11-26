@@ -16,6 +16,7 @@ from __future__ import annotations
 import asyncio
 import os
 import time
+from collections.abc import AsyncIterator
 from typing import Any
 
 from cip.agents.models import AnalysisPlan, AnalysisResult, Finding, Intent
@@ -130,61 +131,99 @@ class Orchestrator:
         iac_payload: str | None,
     ) -> AnalysisResult:
         """Modo estático: classificação → tools → specialists paralelos → merge."""
+        result: AnalysisResult | None = None
+        async for kind, payload in self._static_events(question, cloud, iac_payload):
+            if kind == "result":
+                result = payload
+        assert result is not None
+        return result
+
+    async def handle_stream(
+        self,
+        question: str,
+        cloud: CloudName | None = None,
+        iac_payload: str | None = None,
+        react_mode: bool | None = None,
+    ) -> AsyncIterator[tuple[str, Any]]:
+        """Como ``handle``, mas emite ``("delta", str)`` e por fim ``("result", AnalysisResult)``.
+
+        Com ``LLM_PROVIDER=local`` os deltas do LLM chegam em tempo real; nos demais
+        providers o texto final sai em poucos deltas grandes.
+        """
+        if react_mode is None:
+            react_mode = os.getenv("CIP_REACT_MODE", "false").lower() in ("true", "1", "yes")
+        if react_mode:
+            result = await self.handle(question, cloud, iac_payload, react_mode=True)
+            yield ("delta", result.summary)
+            yield ("result", result)
+            return
+        async for event in self._static_events(question, cloud, iac_payload):
+            yield event
+
+    async def _static_events(
+        self,
+        question: str,
+        cloud: CloudName | None,
+        iac_payload: str | None,
+    ) -> AsyncIterator[tuple[str, Any]]:
         started = time.perf_counter()
         plan = classify(question, has_iac_payload=bool(iac_payload))
         if cloud and cloud not in plan.clouds:
             plan.clouds.append(cloud)
-
         log.info(
             "plan",
             intent=plan.intent.value,
             clouds=plan.clouds,
             specialists=plan.specialists,
         )
-
         tools_used: list[str] = []
         tool_context = ""
         inspection_findings: list[Finding] = []
-
         # 1. Dados ao vivo (read-only) quando o plano pede.
         if plan.use_tools:
             tool_context, tools_used = self._collect_live_data(plan)
-
         # 2. Inspeção de IaC/K8s quando há payload.
         if plan.use_inspection and iac_payload:
             inspection_findings = self._inspect(iac_payload)
 
-        # 3. RAG principal (se há cloud único, filtra; senão, retrieval amplo)
-        rag_primary = await self._engine.query(
-            question,
-            cloud=(plan.clouds[0] if len(plan.clouds) == 1 else None),
-        )
-
-        # 4. Executa especialistas em paralelo (cada um com RAG filtrado pelo seu contexto)
+        is_local = self._settings.llm_provider == "local"
+        # 3. Especialistas em paralelo. Com LLM local (CPU, serializado) eles usam
+        #    síntese extrativa; só a resposta base gera com o LLM (1 geração/pergunta).
         specialist_results = await self._run_specialists(
-            question, plan, tool_context, rag_primary
+            question, plan, tool_context, None
         )
+        merged_summaries = self._merge_specialist_results(specialist_results, None)
+        if merged_summaries:
+            yield ("delta", merged_summaries + "\n\n\n--- Resposta base ---\n")
 
-        # 5. Consolida especialistas (merge de findings cross-domain)
-        merged_summaries = self._merge_specialist_results(
-            specialist_results, rag_primary
-        )
-        # Construir lista consolidada de findings (inspeção + dedupe cross-specialist)
+        # 4. RAG principal (cloud único filtra; senão retrieval amplo).
+        primary_cloud = plan.clouds[0] if len(plan.clouds) == 1 else None
+        rag_primary: Any = None
+        if is_local:
+            async for kind, payload in self._engine.query_stream(
+                question, cloud=primary_cloud
+            ):
+                if kind == "delta":
+                    yield ("delta", payload)
+                else:
+                    rag_primary = payload
+        else:
+            rag_primary = await self._engine.query(question, cloud=primary_cloud)
+            yield ("delta", rag_primary.answer)
+
         consolidated_findings = self._consolidate_findings(
             inspection_findings, specialist_results
         )
-
-        # 6. Consolida response final priorizando especialistas + rag
         summary = self._build_summary(plan, rag_primary, specialist_results, merged_summaries)
-
+        fb = getattr(rag_primary, "fallback", None)
         result = AnalysisResult(
             summary=summary,
             sources=[s.__dict__ for s in rag_primary.sources],
             tools_used=tools_used,
             plan=plan,
+            fallback=fb if isinstance(fb, str) else None,
         )
         result.findings.extend(consolidated_findings)
-
         latency_ms = int((time.perf_counter() - started) * 1000)
         log.info(
             "handled",
@@ -194,7 +233,7 @@ class Orchestrator:
             specialists=len(specialist_results),
             findings=len(result.findings),
         )
-        return result
+        yield ("result", result)
 
     # ── helpers ────────────────────────────────────────────────────────────
     def _collect_live_data(self, plan: AnalysisPlan) -> tuple[str, list[str]]:
@@ -248,10 +287,17 @@ class Orchestrator:
                 spec_cloud = plan.clouds[0]  # type: ignore[assignment]
 
             try:
-                result = await self._engine.query(
-                    augmented_question,
-                    cloud=spec_cloud,
-                )
+                if self._settings.llm_provider == "local":
+                    result = await self._engine.query(
+                        augmented_question,
+                        cloud=spec_cloud,
+                        force_extractive=True,
+                    )
+                else:
+                    result = await self._engine.query(
+                        augmented_question,
+                        cloud=spec_cloud,
+                    )
                 latency_ms = int((time.perf_counter() - t0) * 1000)
                 log.info(
                     "specialist_done",
