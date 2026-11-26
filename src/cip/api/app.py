@@ -27,6 +27,7 @@ from __future__ import annotations
 import asyncio
 import time
 from contextlib import asynccontextmanager
+from typing import Any
 
 from fastapi import Depends, FastAPI, HTTPException, Request, Response
 from fastapi.responses import JSONResponse, PlainTextResponse, StreamingResponse
@@ -506,6 +507,8 @@ async def analyze_stream(
     ctx: TenantContext = Depends(get_tenant),
 ) -> StreamingResponse:
     """Análise completa (orchestrator) com resposta em streaming (SSE)."""
+    from cip.agents.orchestrator import get_orchestrator
+
     check_rate_limit(ctx)
     metrics = get_metrics()
 
