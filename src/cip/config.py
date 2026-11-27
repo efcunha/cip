@@ -40,7 +40,7 @@ class Settings(BaseSettings):
     llm_max_retries: int = 2            # baixo: evita retry storm sob carga
     # Caminho local (Ollama): timeout do 1o token e quanto contexto vai ao modelo pequeno.
     llm_first_token_timeout_s: float = 30.0
-    llm_context_top_k: int = 4          # chunks enviados ao LLM local (<= retrieval_top_k)
+    llm_context_top_k: int = 5          # chunks enviados ao LLM local (<= retrieval_top_k)
     llm_context_chunk_chars: int = 1200  # trunca cada chunk no prompt
     # Query translation (PT-BR -> EN) antes do retrieval; so com LLM real.
     query_translation_enabled: bool = True

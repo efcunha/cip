@@ -61,5 +61,5 @@ def test_new_settings_defaults() -> None:
 
     s = Settings(_env_file=None)
     assert s.llm_first_token_timeout_s == 30.0
-    assert s.llm_context_top_k == 4
+    assert s.llm_context_top_k == 5
     assert s.llm_context_chunk_chars == 1200

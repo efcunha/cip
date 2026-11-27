@@ -65,7 +65,7 @@ EMBED_MODEL = "BAAI/bge-large-en-v1.5"
 # Mesmos valores de src/cip/config.py
 TOP_K = 8
 MIN_SCORE = 0.50
-LLM_CONTEXT_TOP_K = 4
+LLM_CONTEXT_TOP_K = 5
 LLM_CHUNK_CHARS = 1200
 NUM_CTX = 4096
 MAX_TOKENS = 512
@@ -304,7 +304,7 @@ def retrieval_summary(raw: dict[str, Any], questions: list[dict[str, Any]]) -> d
 
 
 def nodes_for(raw: dict[str, Any], qid: str, lang: str = "pt",
-              variant: str = PROD_VARIANT) -> tuple[list[Any], int]:
+              variant: str = PROD_VARIANT, top_k: int | None = None) -> tuple[list[Any], int]:
     """Nós como o engine local os veria: gate min_score, depois top llm_context_top_k.
 
     Retorna ``(nodes, n_above_min_score)``.
@@ -315,7 +315,7 @@ def nodes_for(raw: dict[str, Any], qid: str, lang: str = "pt",
             text=r["text"], score=r["score"],
             metadata={"url": r["url"], "service": r["service"], "cloud": r["cloud"]},
         )
-        for r in rows[:LLM_CONTEXT_TOP_K]
+        for r in rows[:top_k or LLM_CONTEXT_TOP_K]
     ]
     return nodes, len(rows)
 
@@ -476,6 +476,9 @@ def phase_generation(args: argparse.Namespace) -> dict[str, Any]:
         "max_tokens": MAX_TOKENS, "temperature": TEMPERATURE, "models": {},
         "translation": args.translation,
     }
+    ctx_top_k = args.ctx_top_k or LLM_CONTEXT_TOP_K
+    chunk_chars = args.chunk_chars or LLM_CHUNK_CHARS
+    out["ctx_top_k"], out["chunk_chars"] = ctx_top_k, chunk_chars
     openai = args.backend == "openai"
     api_key = ""
     if openai:
@@ -498,12 +501,13 @@ def phase_generation(args: argparse.Namespace) -> dict[str, Any]:
         for model in args.models:
             print(f"== {model}")
             # warm-up descartado (carrega o modelo na memória)
-            sysm, usr = build_grounded_messages("O que é o Amazon S3?", [], LLM_CHUNK_CHARS)
+            sysm, usr = build_grounded_messages("O que é o Amazon S3?", [], chunk_chars)
             warm = gen(client, model, sysm, usr)
             print(f"   warm-up: {warm.get('total_s', 0):.1f}s {warm.get('error', '')}")
             records: list[dict[str, Any]] = []
             for q in questions:
-                nodes, n_above = nodes_for(raw_ret, q["id"], "pt-tr" if tr_raw else "pt")
+                nodes, n_above = nodes_for(raw_ret, q["id"], "pt-tr" if tr_raw else "pt",
+                                       top_k=ctx_top_k)
                 if not nodes:  # gate min_score: o engine recusa sem chamar o LLM
                     records.append({"id": q["id"], "group": q["group"], "outcome": "gated",
                                     "n_above": n_above, "run": 0,
@@ -511,7 +515,7 @@ def phase_generation(args: argparse.Namespace) -> dict[str, Any]:
                                                         ["latency_s"]}
                                        if tr_raw else {})})
                     continue
-                system, user = build_grounded_messages(q["question"], nodes, LLM_CHUNK_CHARS)
+                system, user = build_grounded_messages(q["question"], nodes, chunk_chars)
                 for run in range(1, args.runs + 1):
                     r = gen(client, model, system, user)
                     rec: dict[str, Any] = {"id": q["id"], "group": q["group"], "run": run,
@@ -730,6 +734,8 @@ def main() -> int:
                    help="on = recupera com a pergunta PT traduzida (fase translate)")
     p.add_argument("--translation-raw", help="JSON da fase translate")
     p.add_argument("--translation-timeout", type=float, default=5.0)
+    p.add_argument("--ctx-top-k", type=int, default=0, help="chunks no prompt (default 5)")
+    p.add_argument("--chunk-chars", type=int, default=0, help="chars por chunk (default 1200)")
     p.add_argument("--ssh-host", default="cloudpilot")
     p.add_argument("--pg-user", default="cloudpilot")
     args = p.parse_args()
