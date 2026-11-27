@@ -8,7 +8,7 @@
 
 1. Retrieval (`retrieval_top_k=8`) e gate de `retrieval_min_score` **antes** do LLM. Nada acima do
    score => recusa, o LLM nunca é chamado.
-2. Os melhores `LLM_CONTEXT_TOP_K` (4) trechos, cada um cortado em `LLM_CONTEXT_CHUNK_CHARS`
+2. Os melhores `LLM_CONTEXT_TOP_K` (5) trechos, cada um cortado em `LLM_CONTEXT_CHUNK_CHARS`
    (1200), vão numerados `[1]..[k]` com prompt estrito (`rag/grounded.py`): responder só com o
    contexto, citar `[n]`, sem URLs, responder `NAO_ENCONTRADO` quando o contexto não responde.
 3. Os tokens saem como eventos SSE `chunk` conforme são gerados. Depois: citações devem estar em
@@ -45,7 +45,7 @@ Eventos continuam `chunk` / `done` / `error`. Campos novos (aditivos) em `done`:
 | `LLM_BASE_URL` | vazio | `http://ollama:11434/v1`; vazio mantém `http://localhost:8001/v1` |
 | `LLM_API_KEY` | vazio | opcional; envia `not-needed` se vazio |
 | `LLM_FIRST_TOKEN_TIMEOUT_S` | 30 | |
-| `LLM_CONTEXT_TOP_K` | 4 | trechos enviados ao modelo |
+| `LLM_CONTEXT_TOP_K` | 5 | trechos enviados ao modelo |
 | `LLM_CONTEXT_CHUNK_CHARS` | 1200 | |
 | `QUERY_TRANSLATION_ENABLED` | true | traduz PT-BR -> EN antes do retrieval; só com LLM real |
 | `QUERY_TRANSLATION_TIMEOUT_S` | 5 | timeout/falha usa a pergunta original |

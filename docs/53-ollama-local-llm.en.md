@@ -7,7 +7,7 @@
 
 1. Retrieval (`retrieval_top_k=8`) and the `retrieval_min_score` gate **before** the LLM. Nothing
    above the score => refusal, the LLM is never called.
-2. The best `LLM_CONTEXT_TOP_K` (4) chunks, each trimmed to `LLM_CONTEXT_CHUNK_CHARS` (1200), are
+2. The best `LLM_CONTEXT_TOP_K` (5) chunks, each trimmed to `LLM_CONTEXT_CHUNK_CHARS` (1200), are
    sent numbered `[1]..[k]` with a strict prompt (`rag/grounded.py`): answer only from the
    context, cite `[n]`, no URLs, reply `NAO_ENCONTRADO` when the context does not answer.
 3. Tokens stream to SSE `chunk` events as produced. After generation: citations must be in
@@ -45,7 +45,7 @@ Events stay `chunk` / `done` / `error`. Additive `done` fields: `fallback` (stri
 | `LLM_BASE_URL` | empty | `http://ollama:11434/v1`; empty keeps `http://localhost:8001/v1` |
 | `LLM_API_KEY` | empty | optional; `not-needed` is sent when empty |
 | `LLM_FIRST_TOKEN_TIMEOUT_S` | 30 | |
-| `LLM_CONTEXT_TOP_K` | 4 | chunks sent to the model |
+| `LLM_CONTEXT_TOP_K` | 5 | chunks sent to the model |
 | `LLM_CONTEXT_CHUNK_CHARS` | 1200 | |
 | `QUERY_TRANSLATION_ENABLED` | true | translates PT-BR -> EN before retrieval; real LLM only |
 | `QUERY_TRANSLATION_TIMEOUT_S` | 5 | on timeout/failure the original question is used |

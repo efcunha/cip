@@ -8,6 +8,7 @@
 ## [Unreleased] — Round 14+
 
 ### Added (DeepInfra / Gemma 3 27B)
+- `LLM_CONTEXT_TOP_K` default 4 -> 5 (6+ fixed the AKS node pools answer but broke the GCP pillars and DynamoDB ones; chunk size 1600/2000 changed nothing); `eval/ollama_compare.py` gains `--ctx-top-k`/`--chunk-chars`
 - Production deploy with `LLM_PROVIDER=local` pointing to DeepInfra (`google/gemma-3-27b-it`), extractive fallback kept
 - Ingested 3 pages (Cosmos DB consistency levels, K8s pod disruptions, AKS node pools): 2928 -> 2973 chunks
 - Eval reports in `eval/reports/` (post-ingest: in-RAG false refusal 19% -> 0%)
